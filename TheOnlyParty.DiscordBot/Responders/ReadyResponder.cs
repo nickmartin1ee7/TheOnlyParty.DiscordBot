@@ -54,7 +54,11 @@ public class ReadyResponder : IResponder<IReady>
         {
             var updateResult = await _slashService.UpdateSlashCommandsAsync(ct: ct);
 
-            if (!updateResult.IsSuccess)
+            if (updateResult.IsSuccess)
+            {
+                _logger.LogInformation("Updated application commands globally");
+            }
+            else
             {
                 _logger.LogWarning("Failed to update application commands globally");
             }
