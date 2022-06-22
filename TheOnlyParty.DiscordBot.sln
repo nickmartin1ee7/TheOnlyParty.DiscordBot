@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.2.32516.85
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TheOnlyParty.DiscordBot", "TheOnlyParty.DiscordBot\TheOnlyParty.DiscordBot.csproj", "{408FF905-DD30-48DA-9992-D62831952AAC}"
+EndProject
+Project("{E53339B2-1760-4266-BCC7-CA923CBCF16C}") = "docker-compose", "docker-compose.dcproj", "{C7AAA04F-8CAE-4BE2-9876-980887A22F3B}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{408FF905-DD30-48DA-9992-D62831952AAC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{408FF905-DD30-48DA-9992-D62831952AAC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{408FF905-DD30-48DA-9992-D62831952AAC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{408FF905-DD30-48DA-9992-D62831952AAC}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C7AAA04F-8CAE-4BE2-9876-980887A22F3B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C7AAA04F-8CAE-4BE2-9876-980887A22F3B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C7AAA04F-8CAE-4BE2-9876-980887A22F3B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C7AAA04F-8CAE-4BE2-9876-980887A22F3B}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {AC0F94C8-55BB-404C-8F4F-DEFA47D4DABB}
+	EndGlobalSection
+EndGlobal

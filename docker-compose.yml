@@ -1,0 +1,8 @@
+version: '3.4'
+
+services:
+  theonlyparty.discordbot:
+    image: ${DOCKER_REGISTRY-}theonlypartydiscordbot
+    build:
+      context: .
+      dockerfile: TheOnlyParty.DiscordBot/Dockerfile
