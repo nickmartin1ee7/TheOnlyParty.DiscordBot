@@ -1,6 +1,6 @@
 ﻿namespace TheOnlyParty.DiscordBot;
 
-internal class AppSettings
+public class AppSettings
 {
     public string? DiscordToken { get; set; }
     public string? DiscordStatus { get; set; }

@@ -1,5 +1,3 @@
-using Microsoft.Extensions.DependencyInjection;
-
 using Remora.Commands.Extensions;
 using Remora.Discord.Commands.Extensions;
 using Remora.Discord.Gateway.Extensions;
@@ -9,12 +7,11 @@ using Serilog;
 
 using TheOnlyParty.DiscordBot;
 using TheOnlyParty.DiscordBot.Commands;
-using TheOnlyParty.DiscordBot.Services;
 
 var configuration = new ConfigurationBuilder()
-            .AddJsonFile("appsettings.json")
-            .AddEnvironmentVariables()
-            .Build();
+    .AddJsonFile("appsettings.json")
+    .AddEnvironmentVariables()
+    .Build();
 
 var settings = configuration
     .GetSection(nameof(AppSettings))
@@ -24,7 +21,7 @@ ConfigureLogger(configuration, settings);
 
 IHost host = Host.CreateDefaultBuilder(args)
     .UseSerilog(Log.Logger)
-    .AddDiscordService(_ => settings.DiscordToken)
+    .AddDiscordService(_ => settings.DiscordToken!)
     .ConfigureServices(services =>
     {
         services
@@ -34,7 +31,6 @@ IHost host = Host.CreateDefaultBuilder(args)
             .AddCommandTree()
             .WithCommandGroup<UserCommandGroup>()
             .Finish()
-            .AddHostedService<Worker>()
             ;
 
         var responderTypes = typeof(Program).Assembly
@@ -61,9 +57,8 @@ static void CurrentDomain_UnhandledException(object sender, UnhandledExceptionEv
 static void ConfigureLogger(IConfigurationRoot configuration, AppSettings settings)
 {
     Log.Logger = new LoggerConfiguration()
-        .WriteTo.Console()
         .WriteTo.Seq(
-            serverUrl: settings.LoggingUri,
+            serverUrl: settings.LoggingUri!,
             apiKey: settings.LoggingKey)
         .ReadFrom.Configuration(configuration)
         .CreateLogger();

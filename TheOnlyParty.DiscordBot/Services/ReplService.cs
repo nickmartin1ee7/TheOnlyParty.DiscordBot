@@ -2,7 +2,7 @@
 
 namespace TheOnlyParty.DiscordBot.Services;
 
-internal class ReplService : IDisposable
+public class ReplService : IDisposable
 {
     private readonly string _replUri;
     private readonly HttpClient _client = new();

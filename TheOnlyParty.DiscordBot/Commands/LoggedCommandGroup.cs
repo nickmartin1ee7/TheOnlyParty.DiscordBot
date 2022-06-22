@@ -10,7 +10,7 @@ using System.Runtime.CompilerServices;
 
 namespace TheOnlyParty.DiscordBot.Commands;
 
-internal class LoggedCommandGroup<TCommandGroup> : CommandGroup
+public class LoggedCommandGroup<TCommandGroup> : CommandGroup
     where TCommandGroup : class
 {
     protected readonly ICommandContext _ctx;

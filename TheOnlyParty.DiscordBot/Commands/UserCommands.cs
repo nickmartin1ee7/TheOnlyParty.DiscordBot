@@ -15,7 +15,7 @@ using TheOnlyParty.DiscordBot.Services;
 
 namespace TheOnlyParty.DiscordBot.Commands;
 
-internal class UserCommandGroup : LoggedCommandGroup<UserCommandGroup>
+public class UserCommandGroup : LoggedCommandGroup<UserCommandGroup>
 {
     private readonly FeedbackService _feedbackService;
     private readonly ReplService _replService;
@@ -33,7 +33,6 @@ internal class UserCommandGroup : LoggedCommandGroup<UserCommandGroup>
     }
 
     [Command(nameof(Eval))]
-
     [CommandType(ApplicationCommandType.ChatInput)]
     [Description("Leave feedback for the developer")]
     public async Task<IResult> Eval([Description("Enter your feedback to the developer")] string text)
