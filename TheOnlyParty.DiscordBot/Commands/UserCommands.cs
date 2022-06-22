@@ -11,21 +11,25 @@ using Remora.Discord.Commands.Feedback.Services;
 using Remora.Rest.Core;
 using Remora.Results;
 using TheOnlyParty.DiscordBot.Extensions;
+using TheOnlyParty.DiscordBot.Services;
 
 namespace TheOnlyParty.DiscordBot.Commands;
 
 internal class UserCommandGroup : LoggedCommandGroup<UserCommandGroup>
 {
     private readonly FeedbackService _feedbackService;
+    private readonly ReplService _replService;
 
     public UserCommandGroup(ICommandContext ctx,
         ILogger<UserCommandGroup> logger,
         IDiscordRestGuildAPI guildApi,
         IDiscordRestChannelAPI channelApi,
-        FeedbackService feedbackService)
+        FeedbackService feedbackService,
+        ReplService replService)
         : base(ctx, logger, guildApi, channelApi)
     {
         _feedbackService = feedbackService;
+        _replService = replService;
     }
 
     [Command(nameof(Eval))]
@@ -38,13 +42,32 @@ internal class UserCommandGroup : LoggedCommandGroup<UserCommandGroup>
 
         if (string.IsNullOrWhiteSpace(text))
         {
-            var invalidReply = await _feedbackService.SendContextualErrorAsync("Your message needs additional text.");
+            var invalidReply = await _feedbackService.SendContextualErrorAsync("Your message needs additional text.", ct: CancellationToken);
             return invalidReply.IsSuccess
-                            ? Result.FromSuccess()
-                            : Result.FromError(invalidReply);
+                ? Result.FromSuccess()
+                : Result.FromError(invalidReply);
         }
 
-        
+        var (isSuccess, resultContent) = await _replService.Eval(text, ct: CancellationToken);
+
+        if (isSuccess)
+        {
+            var reply = await _feedbackService.SendContextualEmbedAsync(new Embed(nameof(Eval),
+                Description: resultContent,
+                Author: new EmbedAuthor(_ctx.User.Username)), ct: CancellationToken);
+
+            return reply.IsSuccess
+                            ? Result.FromSuccess()
+                            : Result.FromError(reply);
+        }
+        else
+        {
+            var reply = await _feedbackService.SendContextualErrorAsync(resultContent, ct: CancellationToken);
+
+            return reply.IsSuccess
+                            ? Result.FromSuccess()
+                            : Result.FromError(reply);
+        }
     }
 
     [Command(nameof(Feedback))]
@@ -57,7 +80,8 @@ internal class UserCommandGroup : LoggedCommandGroup<UserCommandGroup>
 
         if (string.IsNullOrWhiteSpace(text))
         {
-            var invalidReply = await _feedbackService.SendContextualErrorAsync("Your feedback must contain a message.");
+            var invalidReply = await _feedbackService.SendContextualErrorAsync("Your feedback must contain a message.", ct: CancellationToken);
+
             return invalidReply.IsSuccess
                             ? Result.FromSuccess()
                             : Result.FromError(invalidReply);

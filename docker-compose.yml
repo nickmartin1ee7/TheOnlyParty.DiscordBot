@@ -6,3 +6,36 @@ services:
     build:
       context: .
       dockerfile: TheOnlyParty.DiscordBot/Dockerfile
+    environment:
+      - AppSettings__DiscordToken
+      - AppSettings__DiscordStatus=Watching for Josh's antics
+      - AppSettings__LoggingUri=http://seq
+      - AppSettings__LoggingKey
+    depends_on:
+      - seq
+      - repl
+
+  seq:
+    image: datalust/seq:2021.3.6681
+    ports:
+        - 8090:80
+    environment:
+        - ACCEPT_EULA=Y
+    volumes:
+        - seqdata:/data
+
+  repl:
+    image: ghcr.io/discord-csharp/csharprepl:latest
+    restart: always
+    read_only: true
+    user: www-data
+    environment: 
+      - ASPNETCORE_URLS=http://+:31337
+    ports:
+      - '31337:31337'
+    tmpfs:
+      - /tmp
+      - /var
+
+volumes:
+  seqdata:

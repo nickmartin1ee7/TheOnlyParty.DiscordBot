@@ -9,6 +9,7 @@ using Serilog;
 
 using TheOnlyParty.DiscordBot;
 using TheOnlyParty.DiscordBot.Commands;
+using TheOnlyParty.DiscordBot.Services;
 
 var configuration = new ConfigurationBuilder()
             .AddJsonFile("appsettings.json")
@@ -23,7 +24,7 @@ ConfigureLogger(configuration, settings);
 
 IHost host = Host.CreateDefaultBuilder(args)
     .UseSerilog(Log.Logger)
-    .AddDiscordService(_ => settings.Token)
+    .AddDiscordService(_ => settings.DiscordToken)
     .ConfigureServices(services =>
     {
         services
