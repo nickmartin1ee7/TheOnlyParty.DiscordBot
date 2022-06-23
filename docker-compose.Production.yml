@@ -76,16 +76,6 @@ services:
     tmpfs:
       - /tmp
       - /var
-    deploy:
-      replicas: 1
-      mode: replicated
-      update_config:
-        parallelism: 1
-      restart_policy:
-        condition: any
-      placement:
-        constraints:
-          - "node.role==manager"
 
 volumes:
   seqdata:
