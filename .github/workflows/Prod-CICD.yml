@@ -49,4 +49,4 @@ jobs:
       
     - name: Build Docker Image (DiscordBot)
       if: ${{ github.ref == 'refs/heads/main' }}
-      run: docker buildx build --platform linux/arm64,linux/amd64 -f "TheOnlyParty.DiscordBot.WorkerService/Dockerfile" --force-rm -t nickmartin1ee7/theonlypartydiscordbotworkerservice:latest --push .
+      run: docker buildx build --platform linux/arm64,linux/amd64 -f "TheOnlyParty.DiscordBot/Dockerfile" --force-rm -t nickmartin1ee7/theonlypartydiscordbot:latest --push .
