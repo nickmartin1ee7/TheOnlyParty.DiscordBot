@@ -11,7 +11,7 @@ services:
       - AppSettings__LoggingKey
       - AppSettings__ReplUri
     depends_on:
-      - seqlogs
+      - seq
       - repl
     deploy:
       replicas: 1
@@ -26,29 +26,10 @@ services:
           - spread: node.lables.slot
           - spread: node.id
 
-  seqlogs:
-    image: datalust/seq:2021.3.6681
-    ports:
-        - 8090:80
-    environment:
-        - ACCEPT_EULA=Y
-    volumes:
-        - seqdata:/data
-    deploy:
-      replicas: 1
-      mode: replicated
-      update_config:
-        parallelism: 1
-      restart_policy:
-        condition: any
-      placement:
-        constraints:
-          - "node.role==manager"
-
   seq:
     image: datalust/seq:2021.3.6681
     ports:
-        - 5341:80
+        - 8090:80
     environment:
         - ACCEPT_EULA=Y
     volumes:
@@ -76,6 +57,16 @@ services:
     tmpfs:
       - /tmp
       - /var
+    deploy:
+      replicas: 1
+      mode: replicated
+      update_config:
+        parallelism: 1
+      restart_policy:
+        condition: any
+      placement:
+        constraints:
+          - "node.role==manager"
 
 volumes:
   seqdata:
