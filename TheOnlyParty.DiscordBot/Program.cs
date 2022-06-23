@@ -32,6 +32,7 @@ IHost host = Host.CreateDefaultBuilder(args)
             .AddTransient(_ => new ReplService(settings.ReplUri!))
             .AddCommandTree()
             .WithCommandGroup<UserCommandGroup>()
+            .WithCommandGroup<RoleCommandGroup>()
             .Finish()
             ;
 
