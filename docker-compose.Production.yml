@@ -11,7 +11,7 @@ services:
       - AppSettings__LoggingKey
       - AppSettings__ReplUri
     depends_on:
-      - seq
+      - seqlogs
       - repl
     deploy:
       replicas: 1
@@ -26,7 +26,7 @@ services:
           - spread: node.lables.slot
           - spread: node.id
 
-  seq:
+  seqlogs:
     image: datalust/seq:2021.3.6681
     ports:
         - 8090:80
