@@ -5,11 +5,11 @@ services:
     image: image: nickmartin1ee7/theonlypartydiscordbot:latest
     environment:
       - AppSettings__DiscordToken
-      - AppSettings__DiscordStatus=Watching for Josh's antics
+      - AppSettings__DiscordStatus
       - AppSettings__DiscordDebugGuildId
-      - AppSettings__LoggingUri=http://seq
+      - AppSettings__LoggingUri
       - AppSettings__LoggingKey
-      - AppSettings__ReplUri=http://repl:31337
+      - AppSettings__ReplUri
     depends_on:
       - seq
       - repl
