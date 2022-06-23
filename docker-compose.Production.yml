@@ -1,0 +1,72 @@
+version: '3.4'
+
+services:
+  workerservice:
+    image: image: nickmartin1ee7/theonlypartydiscordbot:latest
+    environment:
+      - AppSettings__DiscordToken
+      - AppSettings__DiscordStatus=Watching for Josh's antics
+      - AppSettings__DiscordDebugGuildId
+      - AppSettings__LoggingUri=http://seq
+      - AppSettings__LoggingKey
+      - AppSettings__ReplUri=http://repl:31337
+    depends_on:
+      - seq
+      - repl
+    deploy:
+      replicas: 1
+      mode: replicated
+      update_config:
+        parallelism: 1
+      restart_policy:
+        condition: any
+        delay: 5s
+      placement:
+        preferences:
+          - spread: node.lables.slot
+          - spread: node.id
+
+  seq:
+    image: datalust/seq:2021.3.6681
+    ports:
+        - 8090:80
+    environment:
+        - ACCEPT_EULA=Y
+    volumes:
+        - seqdata:/data
+    deploy:
+      replicas: 1
+      mode: replicated
+      update_config:
+        parallelism: 1
+      restart_policy:
+        condition: any
+      placement:
+        constraints:
+          - "node.role==manager"
+
+  repl:
+    image: ghcr.io/discord-csharp/csharprepl:latest
+    restart: always
+    read_only: true
+    user: www-data
+    environment: 
+      - ASPNETCORE_URLS=http://+:31337
+    ports:
+      - '31337:31337'
+    tmpfs:
+      - /tmp
+      - /var
+    deploy:
+      replicas: 1
+      mode: replicated
+      update_config:
+        parallelism: 1
+      restart_policy:
+        condition: any
+      placement:
+        constraints:
+          - "node.role==manager"
+
+volumes:
+  seqdata:
