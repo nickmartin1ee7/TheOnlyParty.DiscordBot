@@ -45,6 +45,25 @@ services:
         constraints:
           - "node.role==manager"
 
+  seq:
+    image: datalust/seq:2021.3.6681
+    ports:
+        - 5341:80
+    environment:
+        - ACCEPT_EULA=Y
+    volumes:
+        - seqdata:/data
+    deploy:
+      replicas: 1
+      mode: replicated
+      update_config:
+        parallelism: 1
+      restart_policy:
+        condition: any
+      placement:
+        constraints:
+          - "node.role==manager"
+
   repl:
     image: ghcr.io/discord-csharp/csharprepl:latest
     restart: always
