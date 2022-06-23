@@ -82,7 +82,6 @@ public class UserCommandGroup : LoggedCommandGroup<UserCommandGroup>
 
         if (!string.IsNullOrWhiteSpace(replResult.Exception))
         {
-            var diffFormatted = Regex.Replace($"{replResult.Exception}", "^", "- ", RegexOptions.Multiline);
             embed.AddField($"Exception: {replResult.ExceptionType}", FormatOrEmptyCodeblock(replResult.Exception!, "txt"));
         }
 
