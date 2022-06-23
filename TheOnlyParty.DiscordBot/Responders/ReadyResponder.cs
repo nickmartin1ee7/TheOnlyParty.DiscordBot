@@ -9,9 +9,11 @@ using Remora.Discord.API.Objects;
 using Remora.Discord.Commands.Services;
 using Remora.Discord.Gateway;
 using Remora.Discord.Gateway.Responders;
+using Remora.Rest.Core;
 using Remora.Results;
 
 using TheOnlyParty.DiscordBot.Extensions;
+using TheOnlyParty.DiscordBot.Models;
 
 namespace TheOnlyParty.DiscordBot.Responders;
 
@@ -50,17 +52,18 @@ public class ReadyResponder : IResponder<IReady>
             _discordGatewayClient.SubmitCommand(updateCommand);
         }
 
-        async Task UpdateGlobalSlashCommands()
+        async Task UpdateSlashCommands(Snowflake? guildId = null)
         {
-            var updateResult = await _slashService.UpdateSlashCommandsAsync(ct: ct);
+            var updateResult = await _slashService.UpdateSlashCommandsAsync(guildId, ct: ct);
+            var target = guildId is null ? "globally" : $"for {guildId}";
 
             if (updateResult.IsSuccess)
             {
-                _logger.LogInformation("Updated application commands globally");
+                _logger.LogInformation("Updated application commands {targetCommandUpdate}", target);
             }
             else
             {
-                _logger.LogWarning("Failed to update application commands globally");
+                _logger.LogWarning("Failed to update application commands {targetCommandUpdate}", target);
             }
         }
 
@@ -84,9 +87,11 @@ public class ReadyResponder : IResponder<IReady>
         }
 
         _logger.LogInformation("Received Ready Event from Gateway");
-        
+
+        _ = Snowflake.TryParse(_settings.DiscordDebugGuildId!, out var guildId);
+
         UpdatePresence();
-        await UpdateGlobalSlashCommands();
+        await UpdateSlashCommands(guildId);
         var userCount = await CountGuildMembersAsync();
 
         _logger.LogInformation(

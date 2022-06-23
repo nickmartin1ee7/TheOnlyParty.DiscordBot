@@ -1,5 +1,7 @@
 ﻿using System.Text;
 
+using TheOnlyParty.DiscordBot.Models;
+
 namespace TheOnlyParty.DiscordBot.Services;
 
 public class ReplService : IDisposable
@@ -9,6 +11,11 @@ public class ReplService : IDisposable
 
     public ReplService(string replUri)
     {
+        if (string.IsNullOrEmpty(replUri))
+        {
+            throw new ArgumentNullException(nameof(replUri));
+        }
+
         _replUri = replUri;
     }
 
@@ -17,10 +24,27 @@ public class ReplService : IDisposable
         _client?.Dispose();
     }
 
-    public async Task<(bool IsSuccess, string ResultContent)> Eval(string code, CancellationToken ct)
+    public async Task<(bool IsSuccess, ReplResult? Result)> Eval(string code, CancellationToken ct)
     {
         var content = new StringContent(code, Encoding.UTF8, "text/plain");
-        var response = await _client.PostAsync($"{_replUri}/eval", content, ct);
-        return (response.IsSuccessStatusCode, await response.Content.ReadAsStringAsync());
+        HttpResponseMessage? response = null;
+
+        for (int i = 0; i < 3; i++)
+        {
+            try
+            {
+                response = await _client.PostAsync($"{_replUri}/eval", content, ct);
+            }
+            catch { }
+
+            if (response != null)
+            {
+                break;
+            }
+        }
+
+        if (response is null) return (false, null);
+
+        return (true, ReplResult.DeserializeFrom(await response.Content.ReadAsStringAsync()));
     }
 }

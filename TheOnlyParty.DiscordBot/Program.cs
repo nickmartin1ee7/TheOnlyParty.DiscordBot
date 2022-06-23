@@ -5,8 +5,9 @@ using Remora.Discord.Hosting.Extensions;
 
 using Serilog;
 
-using TheOnlyParty.DiscordBot;
 using TheOnlyParty.DiscordBot.Commands;
+using TheOnlyParty.DiscordBot.Models;
+using TheOnlyParty.DiscordBot.Services;
 
 var configuration = new ConfigurationBuilder()
     .AddJsonFile("appsettings.json")
@@ -28,6 +29,7 @@ IHost host = Host.CreateDefaultBuilder(args)
             .AddDiscordCommands(true)
             .AddSingleton(configuration)
             .AddSingleton(settings)
+            .AddTransient(_ => new ReplService(settings.ReplUri!))
             .AddCommandTree()
             .WithCommandGroup<UserCommandGroup>()
             .Finish()

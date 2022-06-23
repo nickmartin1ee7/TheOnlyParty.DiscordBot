@@ -9,8 +9,10 @@ services:
     environment:
       - AppSettings__DiscordToken
       - AppSettings__DiscordStatus=Watching for Josh's antics
+      - AppSettings__DiscordDebugGuildId
       - AppSettings__LoggingUri=http://seq
       - AppSettings__LoggingKey
+      - AppSettings__ReplUri=http://repl:31337
     depends_on:
       - seq
       - repl

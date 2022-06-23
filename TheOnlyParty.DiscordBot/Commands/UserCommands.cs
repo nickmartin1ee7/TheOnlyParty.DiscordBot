@@ -12,6 +12,8 @@ using Remora.Rest.Core;
 using Remora.Results;
 using TheOnlyParty.DiscordBot.Extensions;
 using TheOnlyParty.DiscordBot.Services;
+using Remora.Discord.Extensions.Embeds;
+using System.Text.RegularExpressions;
 
 namespace TheOnlyParty.DiscordBot.Commands;
 
@@ -34,12 +36,12 @@ public class UserCommandGroup : LoggedCommandGroup<UserCommandGroup>
 
     [Command(nameof(Eval))]
     [CommandType(ApplicationCommandType.ChatInput)]
-    [Description("Leave feedback for the developer")]
-    public async Task<IResult> Eval([Description("Enter your feedback to the developer")] string text)
+    [Description("Evaluate C# Source Code using REPL")]
+    public async Task<IResult> Eval([Description("Enter C# Source Code")] string code)
     {
-        await LogCommandUsageAsync(text);
+        await LogCommandUsageAsync(nameof(Eval), code);
 
-        if (string.IsNullOrWhiteSpace(text))
+        if (string.IsNullOrWhiteSpace(code))
         {
             var invalidReply = await _feedbackService.SendContextualErrorAsync("Your message needs additional text.", ct: CancellationToken);
             return invalidReply.IsSuccess
@@ -47,26 +49,48 @@ public class UserCommandGroup : LoggedCommandGroup<UserCommandGroup>
                 : Result.FromError(invalidReply);
         }
 
-        var (isSuccess, resultContent) = await _replService.Eval(text, ct: CancellationToken);
+        var (isSuccess, replResult) = await _replService.Eval(code, ct: CancellationToken);
 
-        if (isSuccess)
+        if (!isSuccess)
         {
-            var reply = await _feedbackService.SendContextualEmbedAsync(new Embed(nameof(Eval),
-                Description: resultContent,
-                Author: new EmbedAuthor(_ctx.User.Username)), ct: CancellationToken);
+            var errReply = await _feedbackService.SendContextualErrorAsync("Failed to run evaluation");
 
-            return reply.IsSuccess
-                            ? Result.FromSuccess()
-                            : Result.FromError(reply);
+            return errReply.IsSuccess
+                        ? Result.FromSuccess()
+                        : Result.FromError(errReply);
         }
-        else
+
+        var status = string.IsNullOrEmpty(replResult?.Exception) ? "Success" : "Failure";
+
+        var embed = new EmbedBuilder()
+               .WithTitle($"Evaluation Result: {status}")
+               .WithAuthor(_ctx.User.Username)
+               .WithColour(string.IsNullOrEmpty(replResult!.Exception) ? Color.Green : Color.Red)
+               .WithFooter($"Compile: {replResult!.CompileTime!.Value.TotalMilliseconds:F}ms | Execution: {replResult!.ExecutionTime!.Value.TotalMilliseconds:F}ms");
+
+        embed.WithDescription(FormatOrEmptyCodeblock(replResult!.Code!, "cs"));
+
+        if (replResult.ReturnValue != null)
         {
-            var reply = await _feedbackService.SendContextualErrorAsync(resultContent, ct: CancellationToken);
-
-            return reply.IsSuccess
-                            ? Result.FromSuccess()
-                            : Result.FromError(reply);
+            embed.AddField($"Result: {replResult.ReturnTypeName ?? "null"}", FormatOrEmptyCodeblock($"{replResult.ReturnValue}", "json"));
         }
+
+        if (!string.IsNullOrWhiteSpace(replResult.ConsoleOut))
+        {
+            embed.AddField("Console Output", FormatOrEmptyCodeblock(replResult.ConsoleOut, "txt"));
+        }
+
+        if (!string.IsNullOrWhiteSpace(replResult.Exception))
+        {
+            var diffFormatted = Regex.Replace($"{replResult.Exception}", "^", "- ", RegexOptions.Multiline);
+            embed.AddField($"Exception: {replResult.ExceptionType}", FormatOrEmptyCodeblock(replResult.Exception!, "txt"));
+        }
+
+        var reply = await _feedbackService.SendContextualEmbedAsync(embed.Build().Entity, ct: CancellationToken);
+
+        return reply.IsSuccess
+                        ? Result.FromSuccess()
+                        : Result.FromError(reply);
     }
 
     [Command(nameof(Feedback))]
@@ -96,5 +120,13 @@ public class UserCommandGroup : LoggedCommandGroup<UserCommandGroup>
         return reply.IsSuccess
             ? Result.FromSuccess()
             : Result.FromError(reply);
+    }
+
+    private static string FormatOrEmptyCodeblock(string input, string prefix)
+    {
+        if (string.IsNullOrWhiteSpace(input))
+            return "```\n```";
+
+        return $"```{prefix}{Environment.NewLine}{input}{Environment.NewLine}```";
     }
 }
