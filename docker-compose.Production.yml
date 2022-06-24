@@ -58,12 +58,15 @@ services:
       - repl-tmp:/tmp
       - repl-var:/var
     deploy:
-      replicas: 1
+      replicas: 3
       mode: replicated
       update_config:
-        parallelism: 1
+        parallelism: 2
+        delay: 0s
+        order: start-first
       restart_policy:
         condition: any
+        delay: 0s
       placement:
         constraints:
           - "node.role==manager"
