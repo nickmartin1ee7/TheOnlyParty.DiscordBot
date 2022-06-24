@@ -54,9 +54,9 @@ services:
       - ASPNETCORE_URLS=http://+:31337
     ports:
       - '31337:31337'
-    tmpfs:
-      - /tmp
-      - /var
+    volumes:
+      - repl-tmp:/tmp
+      - repl-var:/var
     deploy:
       replicas: 1
       mode: replicated
@@ -70,3 +70,11 @@ services:
 
 volumes:
   seqdata:
+  repl-tmp:
+    driver_opts:
+      type: tmpfs
+      device: tmpfs
+  repl-var:
+    driver_opts:
+      type: tmpfs
+      device: tmpfs
