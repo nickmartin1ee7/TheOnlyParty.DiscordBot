@@ -7,15 +7,17 @@ services:
       context: .
       dockerfile: TheOnlyParty.DiscordBot/Dockerfile
     environment:
-      - AppSettings__DiscordToken=OTg5MzA3MTQyMDQzNDgwMTI0.G_lChh.IhT9MzAaLhlCwPZY9bcM1F23zxtD3AbfGMNRxs
+      - AppSettings__DiscordToken
       - AppSettings__DiscordStatus=Watching for Josh's antics
-      - AppSettings__DiscordDebugGuildId=748668599182557244
+      - AppSettings__DiscordDebugGuildId
       - AppSettings__LoggingUri=http://seq
       - AppSettings__LoggingKey
       - AppSettings__ReplUri=http://repl:31337
+      - AppSettings__MlUri=http://mlmodel1_webapi1:8050
     depends_on:
       - seq
       - repl
+      - mlmodel1_webapi1
 
   seq:
     image: datalust/seq:2021.3.6681
@@ -44,6 +46,8 @@ services:
     build:
       context: .
       dockerfile: MLModel1_WebApi1/Dockerfile
+    ports:
+      - 8050:80
 
 volumes:
   seqdata:

@@ -10,9 +10,11 @@ services:
       - AppSettings__LoggingUri
       - AppSettings__LoggingKey
       - AppSettings__ReplUri
+      - AppSettings__MlUri
     depends_on:
       - seq
       - repl
+      - mlwebapi
     deploy:
       replicas: 1
       mode: replicated
@@ -21,10 +23,6 @@ services:
       restart_policy:
         condition: any
         delay: 5s
-      placement:
-        preferences:
-          - spread: node.lables.slot
-          - spread: node.id
 
   seq:
     image: datalust/seq:2021.3.6681
@@ -41,9 +39,18 @@ services:
         parallelism: 1
       restart_policy:
         condition: any
-      placement:
-        constraints:
-          - "node.role==manager"
+
+  mlwebapi:
+    image: nickmartin1ee7/mlwebapi:latest
+    ports:
+        - 8010:80
+    deploy:
+      replicas: 2
+      mode: replicated
+      update_config:
+        parallelism: 1
+      restart_policy:
+        condition: any
 
   repl:
     image: ghcr.io/discord-csharp/csharprepl:latest
