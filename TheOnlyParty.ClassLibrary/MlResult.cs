@@ -1,4 +1,4 @@
-﻿namespace TheOnlyParty.DiscordBot.Models;
+﻿namespace TheOnlyParty.ClassLibrary;
 
 public class MlResult
 {

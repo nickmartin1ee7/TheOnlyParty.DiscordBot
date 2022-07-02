@@ -24,4 +24,7 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\TheOnlyParty.ClassLibrary\TheOnlyParty.ClassLibrary.csproj" />
+  </ItemGroup>
 </Project>

@@ -10,6 +10,7 @@ using MLModel1_WebApi1;
 using static MLModel1;
 using Microsoft.AspNetCore.Mvc;
 using System.Linq;
+using TheOnlyParty.ClassLibrary;
 
 // Configure app
 var builder = WebApplication.CreateBuilder(args);
@@ -36,7 +37,7 @@ app.UseSwaggerUI(c =>
 app.MapPost("/predict", async (PredictionEnginePool<MLModel1.ModelInput, MLModel1.ModelOutput> predictionEnginePool, [FromBody] string input) =>
     {
         var result = await Task.FromResult(predictionEnginePool.Predict(new ModelInput { Text = input }));
-        return new
+        return new MlResult
         {
             Positive = result.PredictedLabel > 2f,
             Confidence = result.Score.Max()

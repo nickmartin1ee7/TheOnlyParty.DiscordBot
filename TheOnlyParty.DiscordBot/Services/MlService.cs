@@ -1,7 +1,7 @@
 ﻿using System.Text;
 
+using TheOnlyParty.ClassLibrary;
 using TheOnlyParty.DiscordBot.Extensions;
-using TheOnlyParty.DiscordBot.Models;
 
 namespace TheOnlyParty.DiscordBot.Services;
 
