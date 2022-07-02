@@ -39,5 +39,11 @@ services:
       - /tmp
       - /var
 
+  textsentiment.webapi:
+    image: ${DOCKER_REGISTRY-}textsentimentwebapi
+    build:
+      context: .
+      dockerfile: TextSentiment.WebApi/Dockerfile
+
 volumes:
   seqdata:

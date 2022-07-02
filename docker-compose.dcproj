@@ -4,8 +4,12 @@
     <ProjectVersion>2.1</ProjectVersion>
     <DockerTargetOS>Linux</DockerTargetOS>
     <ProjectGuid>c7aaa04f-8cae-4be2-9876-980887a22f3b</ProjectGuid>
+    <DockerLaunchAction>LaunchBrowser</DockerLaunchAction>
+    <DockerServiceUrl>{Scheme}://localhost:{ServicePort}/swagger</DockerServiceUrl>
+    <DockerServiceName>textsentiment.webapi</DockerServiceName>
   </PropertyGroup>
   <ItemGroup>
+    <None Include="docker-compose.Production.yml" />
     <None Include="docker-compose.override.yml">
       <DependentUpon>docker-compose.yml</DependentUpon>
     </None>
