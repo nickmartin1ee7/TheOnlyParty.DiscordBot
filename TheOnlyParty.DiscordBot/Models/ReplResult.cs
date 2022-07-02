@@ -28,6 +28,4 @@ public class ReplResult
 
     [JsonPropertyName("compileTime")]
     public TimeSpan? CompileTime { get; set; }
-
-    public static ReplResult? DeserializeFrom(string json) => JsonSerializer.Deserialize<ReplResult>(json);
 }
