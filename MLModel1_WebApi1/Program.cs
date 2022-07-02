@@ -7,6 +7,9 @@ using System.Drawing;
 using System.IO;
 using System.Threading.Tasks;
 using MLModel1_WebApi1;
+using static MLModel1;
+using Microsoft.AspNetCore.Mvc;
+using System.Linq;
 
 // Configure app
 var builder = WebApplication.CreateBuilder(args);
@@ -26,13 +29,19 @@ app.UseSwagger();
 
 app.UseSwaggerUI(c =>
 {
-    c.SwaggerEndpoint("/swagger/v1/swagger.json", "My API V1");
+    c.SwaggerEndpoint("/swagger/v1/swagger.json", "Text Sentiment v1");
 });
 
 // Define prediction route & handler
-app.MapPost("/predict",
-    async (PredictionEnginePool<MLModel1.ModelInput, MLModel1.ModelOutput> predictionEnginePool, MLModel1.ModelInput input) =>
-        await Task.FromResult(predictionEnginePool.Predict(input)));
+app.MapPost("/predict", async (PredictionEnginePool<MLModel1.ModelInput, MLModel1.ModelOutput> predictionEnginePool, [FromBody] string input) =>
+    {
+        var result = await Task.FromResult(predictionEnginePool.Predict(new ModelInput { Text = input }));
+        return new
+        {
+            Positive = result.PredictedLabel > 2f,
+            Confidence = result.Score.Max()
+        };
+    });
 
 // Run app
 app.Run();
