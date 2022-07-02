@@ -7,9 +7,9 @@ services:
       context: .
       dockerfile: TheOnlyParty.DiscordBot/Dockerfile
     environment:
-      - AppSettings__DiscordToken
+      - AppSettings__DiscordToken=OTg5MzA3MTQyMDQzNDgwMTI0.G_lChh.IhT9MzAaLhlCwPZY9bcM1F23zxtD3AbfGMNRxs
       - AppSettings__DiscordStatus=Watching for Josh's antics
-      - AppSettings__DiscordDebugGuildId
+      - AppSettings__DiscordDebugGuildId=748668599182557244
       - AppSettings__LoggingUri=http://seq
       - AppSettings__LoggingKey
       - AppSettings__ReplUri=http://repl:31337
@@ -39,11 +39,11 @@ services:
       - /tmp
       - /var
 
-  textsentiment.webapi:
-    image: ${DOCKER_REGISTRY-}textsentimentwebapi
+  mlmodel1_webapi1:
+    image: ${DOCKER_REGISTRY-}mlmodel1webapi1
     build:
       context: .
-      dockerfile: TextSentiment.WebApi/Dockerfile
+      dockerfile: MLModel1_WebApi1/Dockerfile
 
 volumes:
   seqdata:
