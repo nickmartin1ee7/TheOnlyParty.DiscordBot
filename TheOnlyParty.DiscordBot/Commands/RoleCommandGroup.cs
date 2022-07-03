@@ -183,7 +183,10 @@ namespace TheOnlyParty.DiscordBot.Commands
                 return Result.FromSuccess();
             }
 
-            var userReports = _discordDbContext.UserReports.OrderByDescending(ur => ur.PositivityRate).ToArray();
+            var userReports = _discordDbContext.UserReports
+                .AsEnumerable()
+                .OrderByDescending(ur => ur.PositivityRate)
+                .ToArray();
 
             var embedBuilder = new EmbedBuilder
             {
@@ -198,7 +201,7 @@ namespace TheOnlyParty.DiscordBot.Commands
                 var user = await _guildApi.GetGuildMemberAsync(_ctx.GuildID.Value, userId!.Value, CancellationToken);
                 
                 embedBuilder.AddField(
-                    $"{user.Entity.Nickname.Value ?? user.Entity.User.Value.Username}",
+                    $"{user.Entity.Nickname.Value} ({user.Entity.User.Value.Username})",
                     $"{userReport.PositivityRate:P} ({userReport.TotalMessages} messages)",
                     true);
             }
