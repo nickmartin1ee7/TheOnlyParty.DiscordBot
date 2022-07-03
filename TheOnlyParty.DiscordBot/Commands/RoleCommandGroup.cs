@@ -49,27 +49,35 @@ namespace TheOnlyParty.DiscordBot.Commands
         [Description("Get the historical sentiment of a user")]
         public async Task<IResult> GetSentiment([Description("User ID")] string userId)
         {
-            await LogCommandUsageAsync(nameof(GetSentiment), userId);
-
-            if (string.IsNullOrWhiteSpace(userId)) return Result.FromSuccess();
-
-            var user = _discordDbContext.UserReports.FirstOrDefault(ur => ur.UserId == userId);
-
-            if (user is null)
+            try
             {
-                var reply = await _feedbackService.SendContextualErrorAsync("User not found");
+                await LogCommandUsageAsync(nameof(GetSentiment), userId);
 
-                return reply.IsSuccess
-                    ? Result.FromSuccess()
-                    : Result.FromError(reply);
+                if (string.IsNullOrWhiteSpace(userId)) return Result.FromSuccess();
+
+                var user = _discordDbContext.UserReports.FirstOrDefault(ur => ur.UserId == userId);
+
+                if (user is null)
+                {
+                    var reply = await _feedbackService.SendContextualErrorAsync("User not found");
+
+                    return reply.IsSuccess
+                        ? Result.FromSuccess()
+                        : Result.FromError(reply);
+                }
+                else
+                {
+                    var reply = await _feedbackService.SendContextualSuccessAsync($"{user}", ct: CancellationToken);
+
+                    return reply.IsSuccess
+                        ? Result.FromSuccess()
+                        : Result.FromError(reply);
+                }
             }
-            else
+            catch (Exception ex)
             {
-                var reply = await _feedbackService.SendContextualSuccessAsync($"{user}", ct: CancellationToken);
-
-                return reply.IsSuccess
-                    ? Result.FromSuccess()
-                    : Result.FromError(reply);
+                _logger.LogError(ex, "Error getting sentiment");
+                throw;
             }
         }
 
@@ -80,34 +88,42 @@ namespace TheOnlyParty.DiscordBot.Commands
         [Description("Resets the historical sentiment of a user")]
         public async Task<IResult> ResetSentiment([Description("User ID")] string userId)
         {
-            await LogCommandUsageAsync(nameof(ResetSentiment), userId);
-
-            if (string.IsNullOrWhiteSpace(userId)) return Result.FromSuccess();
-
-            var user = _discordDbContext.UserReports.FirstOrDefault(ur => ur.UserId == userId);
-
-            if (user is null)
+            try
             {
-                var reply = await _feedbackService.SendContextualErrorAsync("User has no data");
+                await LogCommandUsageAsync(nameof(ResetSentiment), userId);
 
-                return reply.IsSuccess
-                    ? Result.FromSuccess()
-                    : Result.FromError(reply);
+                if (string.IsNullOrWhiteSpace(userId)) return Result.FromSuccess();
+
+                var user = _discordDbContext.UserReports.FirstOrDefault(ur => ur.UserId == userId);
+
+                if (user is null)
+                {
+                    var reply = await _feedbackService.SendContextualErrorAsync("User has no data");
+
+                    return reply.IsSuccess
+                        ? Result.FromSuccess()
+                        : Result.FromError(reply);
+                }
+                else
+                {
+                    user.TotalMessages = 0;
+                    user.PositiveMessages = 0;
+                    user.NegativeMessages = 0;
+
+                    _discordDbContext.UserReports.Update(user);
+                    await _discordDbContext.SaveChangesAsync();
+
+                    var reply = await _feedbackService.SendContextualSuccessAsync($"User reset: {user}", ct: CancellationToken);
+
+                    return reply.IsSuccess
+                        ? Result.FromSuccess()
+                        : Result.FromError(reply);
+                }
             }
-            else
+            catch (Exception ex)
             {
-                user.TotalMessages = 0;
-                user.PositiveMessages = 0;
-                user.NegativeMessages = 0;
-
-                _discordDbContext.UserReports.Update(user);
-                await _discordDbContext.SaveChangesAsync();
-
-                var reply = await _feedbackService.SendContextualSuccessAsync($"User reset: {user}", ct: CancellationToken);
-
-                return reply.IsSuccess
-                    ? Result.FromSuccess()
-                    : Result.FromError(reply);
+                _logger.LogError(ex, "Failed to reset sentiment");
+                throw;
             }
         }
 
@@ -118,54 +134,62 @@ namespace TheOnlyParty.DiscordBot.Commands
         [Description("Toggle Opt-in/Opt-out of sentiment analysis for you")]
         public async Task<IResult> ToggleSentiment()
         {
-            var authorId = _ctx.User.ID.ToString();
-
-            await LogCommandUsageAsync(nameof(ToggleSentiment), authorId);
-
-            var userOptStatus = _discordDbContext.UserOptStatus.FirstOrDefault(ur => ur.UserId == authorId);
-
-            if (userOptStatus is null)
+            try
             {
-                userOptStatus = new UserOptStatus
+                var authorId = _ctx.User.ID.ToString();
+
+                await LogCommandUsageAsync(nameof(ToggleSentiment), authorId);
+
+                var userOptStatus = _discordDbContext.UserOptStatus.FirstOrDefault(ur => ur.UserId == authorId);
+
+                if (userOptStatus is null)
                 {
-                    UserId = authorId,
-                    Enabled = false // First use is opt-out
-                };
+                    userOptStatus = new UserOptStatus
+                    {
+                        UserId = authorId,
+                        Enabled = false // First use is opt-out
+                    };
 
-                _discordDbContext.UserOptStatus.Add(userOptStatus);
+                    _discordDbContext.UserOptStatus.Add(userOptStatus);
 
-                _logger.LogDebug("UserOptStatus not found, creating new opt-ed out entry");
-            }
-            else
-            {
-                userOptStatus.Enabled = !userOptStatus.Enabled;
-                _discordDbContext.UserOptStatus.Update(userOptStatus);
-
-                _logger.LogDebug("UserOptStatus found, toggling opt-in/opt-out");
-            }
-
-            if (!userOptStatus.Enabled)
-            {
-                var userReport = _discordDbContext.UserReports.FirstOrDefault(ur => ur.UserId == userOptStatus.UserId);
-
-                if (userReport is not null)
+                    _logger.LogDebug("UserOptStatus not found, creating new opt-ed out entry");
+                }
+                else
                 {
-                    _discordDbContext.UserReports.Remove(userReport); // Delete opt-ed out user report
+                    userOptStatus.Enabled = !userOptStatus.Enabled;
+                    _discordDbContext.UserOptStatus.Update(userOptStatus);
+
+                    _logger.LogDebug("UserOptStatus found, toggling opt-in/opt-out");
                 }
 
-                _logger.LogDebug("UserOptStatus is opt-out, deleting user report");
+                if (!userOptStatus.Enabled)
+                {
+                    var userReport = _discordDbContext.UserReports.FirstOrDefault(ur => ur.UserId == userOptStatus.UserId);
+
+                    if (userReport is not null)
+                    {
+                        _discordDbContext.UserReports.Remove(userReport); // Delete opt-ed out user report
+                    }
+
+                    _logger.LogDebug("UserOptStatus is opt-out, deleting user report");
+                }
+
+                await _discordDbContext.SaveChangesAsync();
+
+                var reply = await _feedbackService.SendContextualSuccessAsync($"Your opt status changed: {userOptStatus}",
+                        ct: CancellationToken);
+
+                _logger.LogDebug("Opt status changed successfully");
+
+                return reply.IsSuccess
+                    ? Result.FromSuccess()
+                    : Result.FromError(reply);
             }
-
-            await _discordDbContext.SaveChangesAsync();
-
-            var reply = await _feedbackService.SendContextualSuccessAsync($"Your opt status changed: {userOptStatus}",
-                    ct: CancellationToken);
-
-            _logger.LogDebug("Opt status changed successfully");
-
-            return reply.IsSuccess
-                ? Result.FromSuccess()
-                : Result.FromError(reply);
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error while toggling opt status");
+                throw;
+            }
         }
 
         [Command(nameof(ListUserReports))]
@@ -175,42 +199,60 @@ namespace TheOnlyParty.DiscordBot.Commands
         [Description("List all the user reports")]
         public async Task<IResult> ListUserReports()
         {
-            await LogCommandUsageAsync(nameof(ListUserReports));
-
-            if (!_discordDbContext.UserReports.Any())
+            try
             {
-                var errReply = await _feedbackService.SendContextualErrorAsync("No user reports found");
-                return Result.FromSuccess();
+                await LogCommandUsageAsync(nameof(ListUserReports));
+
+                if (!_discordDbContext.UserReports.Any())
+                {
+                    var errReply = await _feedbackService.SendContextualErrorAsync("No user reports found");
+                    _logger.LogDebug("No user reports found");
+
+                    return errReply.IsSuccess
+                    ? Result.FromSuccess()
+                    : Result.FromError(errReply);
+                }
+
+                var userReports = _discordDbContext.UserReports
+                    .AsEnumerable()
+                    .OrderByDescending(ur => ur.PositivityRate)
+                    .ToArray();
+
+                _logger.LogDebug("Query for user reports successful");
+
+                var embedBuilder = new EmbedBuilder
+                {
+                    Title = "User Reports",
+                    Description = $"There are {userReports.Length} user reports",
+                };
+
+                foreach (var userReport in userReports)
+                {
+                    // get username from userid
+                    _ = Snowflake.TryParse(userReport.UserId, out var userId);
+                    var user = await _guildApi.GetGuildMemberAsync(_ctx.GuildID.Value, userId!.Value, CancellationToken);
+
+                    embedBuilder.AddField(
+                        $"{user.Entity.Nickname.Value} ({user.Entity.User.Value.Username})",
+                        $"{userReport.PositivityRate:P} ({userReport.TotalMessages} messages)",
+                        true);
+                }
+
+                _logger.LogDebug("Built embed for user reports from guild API");
+
+                var reply = await _feedbackService.SendContextualEmbedAsync(embedBuilder.Build().Entity, ct: CancellationToken);
+
+                _logger.LogDebug("List user reports completed successfully");
+
+                return reply.IsSuccess
+                    ? Result.FromSuccess()
+                    : Result.FromError(reply);
             }
-
-            var userReports = _discordDbContext.UserReports
-                .AsEnumerable()
-                .OrderByDescending(ur => ur.PositivityRate)
-                .ToArray();
-
-            var embedBuilder = new EmbedBuilder
+            catch (Exception ex)
             {
-                Title = "User Reports",
-                Description = $"There are {userReports.Length} user reports",
-            };
-
-            foreach (var userReport in userReports)
-            {
-                // get username from userid
-                _ = Snowflake.TryParse(userReport.UserId, out var userId);
-                var user = await _guildApi.GetGuildMemberAsync(_ctx.GuildID.Value, userId!.Value, CancellationToken);
-                
-                embedBuilder.AddField(
-                    $"{user.Entity.Nickname.Value} ({user.Entity.User.Value.Username})",
-                    $"{userReport.PositivityRate:P} ({userReport.TotalMessages} messages)",
-                    true);
+                _logger.LogError(ex, "Error listing user reports");
+                throw;
             }
-
-            var reply = await _feedbackService.SendContextualEmbedAsync(embedBuilder.Build().Entity, ct: CancellationToken);
-
-            return reply.IsSuccess
-                ? Result.FromSuccess()
-                : Result.FromError(reply);
         }
 
         [Command(nameof(ChangeStatus))]
@@ -219,22 +261,30 @@ namespace TheOnlyParty.DiscordBot.Commands
         [Description("Change the status of this bot")]
         public async Task<IResult> ChangeStatus([Description("New status")] string statusMessage)
         {
-            await LogCommandUsageAsync(nameof(ChangeStatus), statusMessage);
-
-            if (string.IsNullOrWhiteSpace(statusMessage)) return Result.FromSuccess();
-
-            var updateCommand = new UpdatePresence(ClientStatus.Online, false, null, new IActivity[]
+            try
             {
+                await LogCommandUsageAsync(nameof(ChangeStatus), statusMessage);
+
+                if (string.IsNullOrWhiteSpace(statusMessage)) return Result.FromSuccess();
+
+                var updateCommand = new UpdatePresence(ClientStatus.Online, false, null, new IActivity[]
+                {
                 new Activity(statusMessage, ActivityType.Watching)
-            });
+                });
 
-            _discordGatewayClient.SubmitCommand(updateCommand);
+                _discordGatewayClient.SubmitCommand(updateCommand);
 
-            var reply = await _feedbackService.SendContextualSuccessAsync("Status changed!", ct: CancellationToken);
+                var reply = await _feedbackService.SendContextualSuccessAsync("Status changed!", ct: CancellationToken);
 
-            return reply.IsSuccess
-                ? Result.FromSuccess()
-                : Result.FromError(reply);
+                return reply.IsSuccess
+                    ? Result.FromSuccess()
+                    : Result.FromError(reply);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error changing status");
+                throw;
+            }
         }
     }
 }
