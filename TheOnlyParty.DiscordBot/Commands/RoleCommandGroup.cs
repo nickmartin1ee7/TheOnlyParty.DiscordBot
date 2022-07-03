@@ -137,11 +137,15 @@ namespace TheOnlyParty.DiscordBot.Commands
                 };
 
                 _discordDbContext.UserOptStatus.Add(userOptStatus);
+
+                _logger.LogDebug("UserOptStatus not found, creating new opt-ed out entry");
             }
             else
             {
                 userOptStatus.Enabled = !userOptStatus.Enabled;
                 _discordDbContext.UserOptStatus.Update(userOptStatus);
+
+                _logger.LogDebug("UserOptStatus found, toggling opt-in/opt-out");
             }
 
             if (!userOptStatus.Enabled)
@@ -152,12 +156,16 @@ namespace TheOnlyParty.DiscordBot.Commands
                 {
                     _discordDbContext.UserReports.Remove(userReport); // Delete opt-ed out user report
                 }
+
+                _logger.LogDebug("UserOptStatus is opt-out, deleting user report");
             }
 
             await _discordDbContext.SaveChangesAsync();
 
             var reply = await _feedbackService.SendContextualSuccessAsync($"Your opt status changed: {userOptStatus}",
                     ct: CancellationToken);
+
+            _logger.LogDebug("Opt status changed successfully");
 
             return reply.IsSuccess
                 ? Result.FromSuccess()
