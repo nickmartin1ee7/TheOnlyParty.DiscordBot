@@ -123,27 +123,39 @@ namespace TheOnlyParty.DiscordBot.Commands
         public async Task<IResult> ToggleSentiment()
         {
             var authorId = _ctx.User.ID.ToString();
-            
+
             await LogCommandUsageAsync(nameof(ToggleSentiment), authorId);
 
             var userOptStatus = _discordDbContext.UserOptStatus.FirstOrDefault(ur => ur.UserId == authorId);
 
             if (userOptStatus is null)
             {
-                _discordDbContext.UserOptStatus.Add(new UserOptStatus
+                userOptStatus = new UserOptStatus
                 {
                     UserId = authorId,
                     Enabled = false // First use is opt-out
-                });
+                };
+
+                _discordDbContext.UserOptStatus.Add(userOptStatus);
             }
             else
             {
                 userOptStatus.Enabled = !userOptStatus.Enabled;
                 _discordDbContext.UserOptStatus.Update(userOptStatus);
             }
-            
-            await _discordDbContext.SaveChangesAsync();                
-            
+
+            if (!userOptStatus.Enabled)
+            {
+                var userReport = _discordDbContext.UserReports.FirstOrDefault(ur => ur.UserId == userOptStatus.UserId);
+
+                if (userReport is not null)
+                {
+                    _discordDbContext.UserReports.Remove(userReport); // Delete opt-ed out user report
+                }
+            }
+
+            await _discordDbContext.SaveChangesAsync();
+
             var reply = await _feedbackService.SendContextualSuccessAsync($"Your opt status changed: {userOptStatus}",
                     ct: CancellationToken);
 
