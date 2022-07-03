@@ -47,6 +47,10 @@ jobs:
       with:
         submodules: 'true'
       
+    - name: Build Docker Image (ML Web API)
+      if: ${{ github.ref == 'refs/heads/main' }}
+      run: docker buildx build --platform linux/arm64,linux/amd64 -f "MLModel1_WebApi1/Dockerfile" --force-rm -t nickmartin1ee7/mlwebapi:latest --push .
+
     - name: Build Docker Image (DiscordBot)
       if: ${{ github.ref == 'refs/heads/main' }}
       run: docker buildx build --platform linux/arm64,linux/amd64 -f "TheOnlyParty.DiscordBot/Dockerfile" --force-rm -t nickmartin1ee7/theonlypartydiscordbot:latest --push .
