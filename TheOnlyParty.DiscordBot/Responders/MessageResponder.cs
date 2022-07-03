@@ -34,7 +34,11 @@ public class MessageCreateResponder : IResponder<IMessageCreate>
         var messageResult = await _channelApi.GetChannelMessageAsync(gatewayEvent.ChannelID, gatewayEvent.ID, ct);
 
         if (!messageResult.IsSuccess || string.IsNullOrWhiteSpace(messageResult.Entity.Content))
-            return Result.FromSuccess();
+        {
+            _logger.LogError("Failed to get message content! {errorMessage}",
+                messageResult.Error?.Message ?? "Error message N/A");
+            return Result.FromError(messageResult);
+        }
 
         _logger.LogDebug("[2/4] Got content for message ({messageId})", messageResult.Entity.ID);
 
