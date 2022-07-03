@@ -3,20 +3,19 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.ML;
 using Microsoft.OpenApi.Models;
-using System.Drawing;
-using System.IO;
 using System.Threading.Tasks;
-using MLModel1_WebApi1;
 using static MLModel1;
 using Microsoft.AspNetCore.Mvc;
 using System.Linq;
 using TheOnlyParty.ClassLibrary;
+using Microsoft.Extensions.Logging;
 
 // Configure app
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddPredictionEnginePool<MLModel1.ModelInput, MLModel1.ModelOutput>()
     .FromFile("MLModel1.zip");
+
 builder.Services.AddEndpointsApiExplorer();
 
 builder.Services.AddSwaggerGen(c =>
@@ -37,6 +36,7 @@ app.UseSwaggerUI(c =>
 app.MapPost("/predict", async (PredictionEnginePool<MLModel1.ModelInput, MLModel1.ModelOutput> predictionEnginePool, [FromBody] string input) =>
     {
         var result = await Task.FromResult(predictionEnginePool.Predict(new ModelInput { Text = input }));
+        
         return new MlResult
         {
             Positive = result.PredictedLabel > 2f,

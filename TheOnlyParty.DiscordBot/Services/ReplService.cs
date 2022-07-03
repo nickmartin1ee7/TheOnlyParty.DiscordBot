@@ -1,5 +1,6 @@
 ﻿using System.Text;
 
+using TheOnlyParty.DiscordBot.Extensions;
 using TheOnlyParty.DiscordBot.Models;
 
 namespace TheOnlyParty.DiscordBot.Services;
@@ -24,9 +25,9 @@ public class ReplService : IDisposable
         _client?.Dispose();
     }
 
-    public async Task<(bool IsSuccess, ReplResult? Result)> Eval(string code, CancellationToken ct)
+    public async Task<(bool IsSuccess, ReplResult? Result)> EvalAsync(string input, CancellationToken ct = default)
     {
-        var content = new StringContent(code, Encoding.UTF8, "text/plain");
+        var content = new StringContent(input, Encoding.UTF8, "text/plain");
         HttpResponseMessage? response = null;
 
         for (int i = 0; i < 3; i++)
@@ -45,6 +46,6 @@ public class ReplService : IDisposable
 
         if (response is null) return (false, null);
 
-        return (true, ReplResult.DeserializeFrom(await response.Content.ReadAsStringAsync()));
+        return (true, (await response.Content.ReadAsStringAsync()).FromJson<ReplResult>());
     }
 }

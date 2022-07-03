@@ -4,5 +4,5 @@ namespace TheOnlyParty.DiscordBot.Extensions;
 
 public static class StringExtensions
 {
-    public static T? FromJson<T>(this string json) => JsonSerializer.Deserialize<T>(json);
+    public static T? FromJson<T>(this string json) => JsonSerializer.Deserialize<T>(json, new JsonSerializerOptions(JsonSerializerDefaults.Web));
 }

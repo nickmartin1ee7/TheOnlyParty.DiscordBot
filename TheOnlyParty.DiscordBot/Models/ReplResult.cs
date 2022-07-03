@@ -3,29 +3,29 @@ using System.Text.Json.Serialization;
 
 namespace TheOnlyParty.DiscordBot.Models;
 
-public class ReplResult
+public record ReplResult
 {
     [JsonPropertyName("returnValue")]
-    public string? ReturnValue { get; set; }
+    public string? ReturnValue { get; init; }
 
     [JsonPropertyName("returnTypeName")]
-    public string? ReturnTypeName { get; set; }
+    public string? ReturnTypeName { get; init; }
 
     [JsonPropertyName("exception")]
-    public string? Exception { get; set; }
+    public string? Exception { get; init; }
 
     [JsonPropertyName("exceptionType")]
-    public string? ExceptionType { get; set; }
+    public string? ExceptionType { get; init; }
 
     [JsonPropertyName("code")]
-    public string? Code { get; set; }
+    public string? Code { get; init; }
 
     [JsonPropertyName("consoleOut")]
-    public string? ConsoleOut { get; set; }
+    public string? ConsoleOut { get; init; }
 
     [JsonPropertyName("executionTime")]
-    public TimeSpan? ExecutionTime { get; set; }
+    public TimeSpan? ExecutionTime { get; init; }
 
     [JsonPropertyName("compileTime")]
-    public TimeSpan? CompileTime { get; set; }
+    public TimeSpan? CompileTime { get; init; }
 }

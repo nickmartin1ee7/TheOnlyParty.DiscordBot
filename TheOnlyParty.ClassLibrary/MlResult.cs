@@ -1,7 +1,7 @@
 ﻿namespace TheOnlyParty.ClassLibrary;
 
-public class MlResult
+public record MlResult
 {
-    public bool Positive { get; set; }
-    public float Confidence { get; set; }
+    public bool Positive { get; init; }
+    public float Confidence { get; init; }
 }

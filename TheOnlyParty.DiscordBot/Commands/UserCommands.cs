@@ -49,7 +49,7 @@ public class UserCommandGroup : LoggedCommandGroup<UserCommandGroup>
                 : Result.FromError(invalidReply);
         }
 
-        var (isSuccess, replResult) = await _replService.Eval(code, ct: CancellationToken);
+        var (isSuccess, replResult) = await _replService.EvalAsync(code, ct: CancellationToken);
 
         if (!isSuccess)
         {

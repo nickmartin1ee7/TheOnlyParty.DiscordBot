@@ -25,9 +25,9 @@ public class MlService : IDisposable
         _client?.Dispose();
     }
 
-    public async Task<(bool IsSuccess, MlResult? Result)> Predict(string code, CancellationToken ct)
+    public async Task<(bool IsSuccess, MlResult? Result)> PredictAsync(string input, CancellationToken ct = default)
     {
-        var content = new StringContent(code, Encoding.UTF8, "text/plain");
+        var content = new StringContent(input, Encoding.UTF8, "application/json");
         HttpResponseMessage? response = null;
 
         for (int i = 0; i < 3; i++)
