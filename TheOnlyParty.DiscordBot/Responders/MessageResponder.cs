@@ -1,5 +1,4 @@
-﻿
-using Remora.Discord.API.Abstractions.Gateway.Events;
+﻿using Remora.Discord.API.Abstractions.Gateway.Events;
 using Remora.Discord.API.Abstractions.Rest;
 using Remora.Discord.Gateway.Responders;
 using Remora.Results;
@@ -30,10 +29,14 @@ public class MessageCreateResponder : IResponder<IMessageCreate>
 
     public async Task<Result> RespondAsync(IMessageCreate gatewayEvent, CancellationToken ct = default)
     {
+        _logger.LogDebug("[1/4] Message Created by {authorName} ({authorId})", gatewayEvent.Author.Username, gatewayEvent.Author.ID);
+
         var messageResult = await _channelApi.GetChannelMessageAsync(gatewayEvent.ChannelID, gatewayEvent.ID, ct);
 
         if (!messageResult.IsSuccess || string.IsNullOrWhiteSpace(messageResult.Entity.Content))
             return Result.FromSuccess();
+
+        _logger.LogDebug("[2/4] Got content for message ({messageId})", messageResult.Entity.ID);
 
         var mlResult = await _mlService.PredictAsync(messageResult.Entity.Content, ct);
 
@@ -45,7 +48,7 @@ public class MessageCreateResponder : IResponder<IMessageCreate>
 
         var authorId = messageResult.Entity.Author.ID.ToString();
 
-        _logger.LogTrace("{authorName} ({authorId}): {messageContent} ({prediction} - {confidence:P})",
+        _logger.LogInformation("{authorName} ({authorId}): {messageContent} ({prediction} - {confidence:P})",
             messageResult.Entity.Author.Username,
             authorId,
             messageResult.Entity.Content,
@@ -56,6 +59,8 @@ public class MessageCreateResponder : IResponder<IMessageCreate>
 
         if (existingUser is null)
         {
+            _logger.LogDebug("[3/4] Creating new User Report for {authorId}", authorId);
+
             _discordDb.UserReports.Add(new UserReport
             {
                 UserId = authorId,
@@ -66,6 +71,7 @@ public class MessageCreateResponder : IResponder<IMessageCreate>
         }
         else
         {
+            _logger.LogDebug("[3/4] Updating User Report for {authorId}", authorId);
             existingUser.TotalMessages++;
             existingUser.PositiveMessages += mlResult.Result.Positive ? 1 : 0;
             existingUser.NegativeMessages += mlResult.Result.Positive ? 0 : 1;
@@ -73,6 +79,8 @@ public class MessageCreateResponder : IResponder<IMessageCreate>
         }
 
         await _discordDb.SaveChangesAsync();
+
+        _logger.LogDebug("[4/4] Message Created handled successfully");
 
         return Result.FromSuccess();
     }
