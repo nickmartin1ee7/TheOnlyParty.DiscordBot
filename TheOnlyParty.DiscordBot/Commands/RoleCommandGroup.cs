@@ -10,6 +10,7 @@ using Remora.Discord.Commands.Contexts;
 using Remora.Discord.Commands.Feedback.Services;
 using Remora.Discord.Extensions.Embeds;
 using Remora.Discord.Gateway;
+using Remora.Rest.Core;
 using Remora.Results;
 
 using TheOnlyParty.DiscordBot.DbContexts;
@@ -172,7 +173,7 @@ namespace TheOnlyParty.DiscordBot.Commands
         [DiscordDefaultMemberPermissions(DiscordPermission.Administrator)]
         [Ephemeral]
         [Description("List all the user reports")]
-        public async Task<IResult> ListUserReports([Description("Order in reverse")] bool reverse)
+        public async Task<IResult> ListUserReports()
         {
             await LogCommandUsageAsync(nameof(ListUserReports));
 
@@ -182,18 +183,27 @@ namespace TheOnlyParty.DiscordBot.Commands
                 return Result.FromSuccess();
             }
 
-            var userReports = reverse
-                ? _discordDbContext.UserReports.OrderBy(ur => ur.PositivityRate).ToArray()
-                : _discordDbContext.UserReports.OrderByDescending(ur => ur.PositivityRate).ToArray();
+            var userReports = _discordDbContext.UserReports.OrderByDescending(ur => ur.PositivityRate).ToArray();
 
-            var embed = new EmbedBuilder
+            var embedBuilder = new EmbedBuilder
             {
                 Title = "User Reports",
-                Description = string.Join(Environment.NewLine, userReports                    
-                    .Select(ur => ur.ToString()))
-            }.Build();
+                Description = $"There are {userReports.Length} user reports",
+            };
 
-            var reply = await _feedbackService.SendContextualEmbedAsync(embed.Entity, ct: CancellationToken);
+            foreach (var userReport in userReports)
+            {
+                // get username from userid
+                _ = Snowflake.TryParse(userReport.UserId, out var userId);
+                var user = await _guildApi.GetGuildMemberAsync(_ctx.GuildID.Value, userId!.Value, CancellationToken);
+                
+                embedBuilder.AddField(
+                    $"{user.Entity.Nickname.Value ?? user.Entity.User.Value.Username}",
+                    $"{userReport.PositivityRate:P} ({userReport.TotalMessages} messages)",
+                    true);
+            }
+
+            var reply = await _feedbackService.SendContextualEmbedAsync(embedBuilder.Build().Entity, ct: CancellationToken);
 
             return reply.IsSuccess
                 ? Result.FromSuccess()
