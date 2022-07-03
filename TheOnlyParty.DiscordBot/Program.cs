@@ -55,6 +55,7 @@ IHost host = Host.CreateDefaultBuilder(args)
 
 AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;
 
+host.Services.GetRequiredService<DiscordDbContext>().Database.Migrate();
 await host.RunAsync();
 
 static void CurrentDomain_UnhandledException(object sender, UnhandledExceptionEventArgs e)
