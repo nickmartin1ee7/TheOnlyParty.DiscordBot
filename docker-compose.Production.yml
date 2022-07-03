@@ -15,6 +15,8 @@ services:
       - seq
       - repl
       - mlwebapi
+    volumes:
+      - discorddata:/data
     deploy:
       replicas: 1
       mode: replicated
@@ -43,7 +45,7 @@ services:
   mlwebapi:
     image: nickmartin1ee7/mlwebapi:latest
     ports:
-        - 8010:80
+      - 8091:80
     deploy:
       replicas: 2
       mode: replicated
@@ -60,7 +62,7 @@ services:
     environment: 
       - ASPNETCORE_URLS=http://+:31337
     ports:
-      - '31337:31337'
+      - '8092:31337'
     volumes:
       - repl-tmp:/tmp
       - repl-var:/var
@@ -80,6 +82,7 @@ services:
 
 volumes:
   seqdata:
+  discorddata:
   repl-tmp:
     driver_opts:
       type: tmpfs
