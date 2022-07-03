@@ -8,23 +8,31 @@ services:
       dockerfile: TheOnlyParty.DiscordBot/Dockerfile
     environment:
       - AppSettings__DiscordToken
-      - AppSettings__DiscordStatus=Watching for Josh's antics
+      - AppSettings__DiscordStatus=Testing in progress!
       - AppSettings__DiscordDebugGuildId
       - AppSettings__LoggingUri=http://seq
       - AppSettings__LoggingKey
       - AppSettings__ReplUri=http://repl:31337
+      - AppSettings__MlUri=http://mlmodel1webapi1
     depends_on:
       - seq
       - repl
+      - mlmodel1webapi1
+    volumes:
+      - discorddata:/data
+    networks:
+      - backend
 
   seq:
     image: datalust/seq:2021.3.6681
     ports:
-        - 8090:80
+        - 31335:80
     environment:
         - ACCEPT_EULA=Y
     volumes:
         - seqdata:/data
+    networks:
+      - backend
 
   repl:
     image: ghcr.io/discord-csharp/csharprepl:latest
@@ -38,6 +46,22 @@ services:
     tmpfs:
       - /tmp
       - /var
+    networks:
+      - backend
+
+  mlmodel1webapi1:
+    image: ${DOCKER_REGISTRY-}mlmodel1webapi1
+    build:
+      context: .
+      dockerfile: MLModel1_WebApi1/Dockerfile
+    ports:
+      - 31330:80
+    networks:
+      - backend
 
 volumes:
   seqdata:
+  discorddata:
+
+networks:
+  backend:

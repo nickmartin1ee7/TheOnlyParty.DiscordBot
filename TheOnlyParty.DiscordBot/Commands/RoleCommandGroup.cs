@@ -17,6 +17,7 @@ using Remora.Discord.Commands.Feedback.Services;
 using Remora.Discord.Gateway;
 using Remora.Results;
 
+using TheOnlyParty.DiscordBot.DbContexts;
 using TheOnlyParty.DiscordBot.Models;
 using TheOnlyParty.DiscordBot.Services;
 
@@ -26,6 +27,7 @@ namespace TheOnlyParty.DiscordBot.Commands
     {
         private readonly DiscordGatewayClient _discordGatewayClient;
         private readonly FeedbackService _feedbackService;
+        private readonly DiscordDbContext _discordDbContext;
         private readonly ReplService _replService;
 
         public RoleCommandGroup(ICommandContext ctx,
@@ -34,12 +36,83 @@ namespace TheOnlyParty.DiscordBot.Commands
             DiscordGatewayClient discordGatewayClient,
             IDiscordRestChannelAPI channelApi,
             FeedbackService feedbackService,
+            DiscordDbContext discordDbContext,
             ReplService replService)
             : base(ctx, logger, guildApi, channelApi)
         {
             _discordGatewayClient = discordGatewayClient;
             _feedbackService = feedbackService;
+            _discordDbContext = discordDbContext;
             _replService = replService;
+        }
+
+        [Command(nameof(GetSentiment))]
+        [CommandType(ApplicationCommandType.ChatInput)]
+        [DiscordDefaultMemberPermissions(DiscordPermission.Administrator)]
+        [Ephemeral]
+        [Description("Get the historical sentiment of a user")]
+        public async Task<IResult> GetSentiment([Description("User ID")] string userId)
+        {
+            await LogCommandUsageAsync(nameof(GetSentiment), userId);
+
+            if (string.IsNullOrWhiteSpace(userId)) return Result.FromSuccess();
+
+            var user = _discordDbContext.UserReports.FirstOrDefault(ur => ur.UserId == userId);
+
+            if (user is null)
+            {
+                var reply = await _feedbackService.SendContextualErrorAsync("User not found");
+
+                return reply.IsSuccess
+                    ? Result.FromSuccess()
+                    : Result.FromError(reply);
+            }
+            else
+            {
+                var reply = await _feedbackService.SendContextualSuccessAsync($"{user}", ct: CancellationToken);
+
+                return reply.IsSuccess
+                    ? Result.FromSuccess()
+                    : Result.FromError(reply);
+            }
+        }
+
+        [Command(nameof(ResetSentiment))]
+        [CommandType(ApplicationCommandType.ChatInput)]
+        [DiscordDefaultMemberPermissions(DiscordPermission.Administrator)]
+        [Ephemeral]
+        [Description("Resets the historical sentiment of a user")]
+        public async Task<IResult> ResetSentiment([Description("User ID")] string userId)
+        {
+            await LogCommandUsageAsync(nameof(ResetSentiment), userId);
+
+            if (string.IsNullOrWhiteSpace(userId)) return Result.FromSuccess();
+
+            var user = _discordDbContext.UserReports.FirstOrDefault(ur => ur.UserId == userId);
+
+            if (user is null)
+            {
+                var reply = await _feedbackService.SendContextualErrorAsync("User has no data");
+
+                return reply.IsSuccess
+                    ? Result.FromSuccess()
+                    : Result.FromError(reply);
+            }
+            else
+            {
+                user.TotalMessages = 0;
+                user.PositiveMessages = 0;
+                user.NegativeMessages = 0;
+
+                _discordDbContext.UserReports.Update(user);
+                await _discordDbContext.SaveChangesAsync();
+
+                var reply = await _feedbackService.SendContextualSuccessAsync($"User reset: {user}", ct: CancellationToken);
+
+                return reply.IsSuccess
+                    ? Result.FromSuccess()
+                    : Result.FromError(reply);
+            }
         }
 
         [Command(nameof(ChangeStatus))]

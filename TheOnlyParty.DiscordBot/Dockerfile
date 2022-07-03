@@ -12,6 +12,7 @@ WORKDIR "/src/TheOnlyParty.DiscordBot"
 RUN dotnet build "TheOnlyParty.DiscordBot.csproj" -c Release -o /app/build
 
 FROM build AS publish
+COPY /app/Data /data
 RUN dotnet publish "TheOnlyParty.DiscordBot.csproj" -c Release -o /app/publish
 
 FROM base AS final

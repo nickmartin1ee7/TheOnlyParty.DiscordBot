@@ -8,4 +8,5 @@ public class AppSettings
     public string? LoggingUri { get; set; }
     public string? LoggingKey { get; set; }
     public string? ReplUri { get; set; }
+    public string? MlUri { get; set; }
 }
