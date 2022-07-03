@@ -13,7 +13,7 @@ public class MessageCreateResponder : IResponder<IMessageCreate>
 {
     private readonly ILogger<MessageCreateResponder> _logger;
     private readonly IDiscordRestChannelAPI _channelApi;
-    private readonly DiscordDbContext _discordDb;
+    private readonly DiscordDbContext _discordDbContext;
     private readonly MlService _mlService;
 
     public MessageCreateResponder(ILogger<MessageCreateResponder> logger,
@@ -23,13 +23,32 @@ public class MessageCreateResponder : IResponder<IMessageCreate>
     {
         _logger = logger;
         _channelApi = channelApi;
-        _discordDb = discordDb;
+        _discordDbContext = discordDb;
         _mlService = mlService;
     }
 
     public async Task<Result> RespondAsync(IMessageCreate gatewayEvent, CancellationToken ct = default)
     {
-        _logger.LogDebug("[1/4] Message Created by {authorName} ({authorId})", gatewayEvent.Author.Username, gatewayEvent.Author.ID);
+        var authorId = gatewayEvent.Author.ID.ToString();
+
+        var userOptStatus = _discordDbContext.UserOptStatus.FirstOrDefault(u => u.UserId == authorId);
+
+        if (userOptStatus is null)
+        {
+            userOptStatus = new UserOptStatus
+            {
+                UserId = authorId,
+                Enabled = true
+            };
+
+            _discordDbContext.UserOptStatus.Add(userOptStatus);
+        }
+        else if (!userOptStatus.Enabled)
+        {
+            return Result.FromSuccess();
+        }
+
+        _logger.LogDebug("[1/4] Message Created by {authorName} ({authorId})", gatewayEvent.Author.Username, authorId);
 
         var messageResult = await _channelApi.GetChannelMessageAsync(gatewayEvent.ChannelID, gatewayEvent.ID, ct);
 
@@ -50,8 +69,6 @@ public class MessageCreateResponder : IResponder<IMessageCreate>
             return Result.FromSuccess();
         }
 
-        var authorId = messageResult.Entity.Author.ID.ToString();
-
         _logger.LogInformation("{authorName} ({authorId}): {messageContent} ({prediction} - {confidence:P})",
             messageResult.Entity.Author.Username,
             authorId,
@@ -59,13 +76,13 @@ public class MessageCreateResponder : IResponder<IMessageCreate>
             mlResult.Result.Positive ? "Positive" : "Negative",
             mlResult.Result.Confidence);
 
-        var existingUser = _discordDb.UserReports.FirstOrDefault(ur => ur.UserId == authorId);
+        var existingUser = _discordDbContext.UserReports.FirstOrDefault(ur => ur.UserId == authorId);
 
         if (existingUser is null)
         {
             _logger.LogDebug("[3/4] Creating new User Report for {authorId}", authorId);
 
-            _discordDb.UserReports.Add(new UserReport
+            _discordDbContext.UserReports.Add(new UserReport
             {
                 UserId = authorId,
                 TotalMessages = 1,
@@ -79,10 +96,10 @@ public class MessageCreateResponder : IResponder<IMessageCreate>
             existingUser.TotalMessages++;
             existingUser.PositiveMessages += mlResult.Result.Positive ? 1 : 0;
             existingUser.NegativeMessages += mlResult.Result.Positive ? 0 : 1;
-            _discordDb.UserReports.Update(existingUser);
+            _discordDbContext.UserReports.Update(existingUser);
         }
 
-        await _discordDb.SaveChangesAsync();
+        await _discordDbContext.SaveChangesAsync();
 
         _logger.LogDebug("[4/4] Message Created handled successfully");
 
