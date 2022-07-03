@@ -176,6 +176,12 @@ namespace TheOnlyParty.DiscordBot.Commands
         {
             await LogCommandUsageAsync(nameof(ListUserReports));
 
+            if (!_discordDbContext.UserReports.Any())
+            {
+                var errReply = await _feedbackService.SendContextualErrorAsync("No user reports found");
+                return Result.FromSuccess();
+            }
+
             var userReports = reverse
                 ? _discordDbContext.UserReports.OrderBy(ur => ur.PositivityRate).ToArray()
                 : _discordDbContext.UserReports.OrderByDescending(ur => ur.PositivityRate).ToArray();
