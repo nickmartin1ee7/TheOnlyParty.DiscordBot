@@ -16,7 +16,7 @@ services:
       - repl
       - mlwebapi
     volumes:
-      - discorddata:/data
+      - discorddata:/app
     deploy:
       replicas: 1
       mode: replicated
