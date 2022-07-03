@@ -1,3 +1,5 @@
+using Microsoft.EntityFrameworkCore;
+
 using Remora.Commands.Extensions;
 using Remora.Discord.Commands.Extensions;
 using Remora.Discord.Gateway.Extensions;
@@ -6,6 +8,7 @@ using Remora.Discord.Hosting.Extensions;
 using Serilog;
 
 using TheOnlyParty.DiscordBot.Commands;
+using TheOnlyParty.DiscordBot.DbContexts;
 using TheOnlyParty.DiscordBot.Models;
 using TheOnlyParty.DiscordBot.Services;
 
@@ -26,6 +29,8 @@ IHost host = Host.CreateDefaultBuilder(args)
     .ConfigureServices(services =>
     {
         services
+            .AddDbContext<DiscordDbContext>(options => options
+                .UseSqlite("Data Source = discord.db"))
             .AddDiscordCommands(true)
             .AddSingleton(configuration)
             .AddSingleton(settings)
