@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Linq;
-using System.Runtime;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.ComponentModel;
 
 using Remora.Commands.Attributes;
 using Remora.Discord.API.Abstractions.Objects;
@@ -14,6 +8,7 @@ using Remora.Discord.API.Objects;
 using Remora.Discord.Commands.Attributes;
 using Remora.Discord.Commands.Contexts;
 using Remora.Discord.Commands.Feedback.Services;
+using Remora.Discord.Extensions.Embeds;
 using Remora.Discord.Gateway;
 using Remora.Results;
 
@@ -166,6 +161,33 @@ namespace TheOnlyParty.DiscordBot.Commands
                     ct: CancellationToken);
 
             _logger.LogDebug("Opt status changed successfully");
+
+            return reply.IsSuccess
+                ? Result.FromSuccess()
+                : Result.FromError(reply);
+        }
+
+        [Command(nameof(ListUserReports))]
+        [CommandType(ApplicationCommandType.ChatInput)]
+        [DiscordDefaultMemberPermissions(DiscordPermission.Administrator)]
+        [Ephemeral]
+        [Description("List all the user reports")]
+        public async Task<IResult> ListUserReports([Description("Order in reverse")] bool reverse)
+        {
+            await LogCommandUsageAsync(nameof(ListUserReports));
+
+            var userReports = reverse
+                ? _discordDbContext.UserReports.OrderBy(ur => ur.PositivityRate).ToArray()
+                : _discordDbContext.UserReports.OrderByDescending(ur => ur.PositivityRate).ToArray();
+
+            var embed = new EmbedBuilder
+            {
+                Title = "User Reports",
+                Description = string.Join(Environment.NewLine, userReports                    
+                    .Select(ur => ur.ToString()))
+            }.Build();
+
+            var reply = await _feedbackService.SendContextualEmbedAsync(embed.Entity, ct: CancellationToken);
 
             return reply.IsSuccess
                 ? Result.FromSuccess()
