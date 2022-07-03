@@ -30,7 +30,7 @@ IHost host = Host.CreateDefaultBuilder(args)
     {
         services
             .AddDbContext<DiscordDbContext>(options => options
-                .UseSqlite("Data Source = discord.db"))
+                .UseSqlite("Data Source = /data/discord.db"))
             .AddDiscordCommands(true)
             .AddSingleton(configuration)
             .AddSingleton(settings)

@@ -19,7 +19,7 @@ services:
       - repl
       - mlmodel1webapi1
     volumes:
-      - discorddata
+      - discorddata:/data
     networks:
       - backend
 

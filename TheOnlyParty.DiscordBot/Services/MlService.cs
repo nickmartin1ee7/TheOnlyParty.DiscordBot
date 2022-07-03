@@ -1,4 +1,5 @@
 ﻿using System.Text;
+using System.Text.Json;
 
 using TheOnlyParty.ClassLibrary;
 using TheOnlyParty.DiscordBot.Extensions;
@@ -27,14 +28,15 @@ public class MlService : IDisposable
 
     public async Task<(bool IsSuccess, MlResult? Result)> PredictAsync(string input, CancellationToken ct = default)
     {
-        var content = new StringContent(input, Encoding.UTF8, "application/json");
         HttpResponseMessage? response = null;
 
         for (int i = 0; i < 3; i++)
         {
             try
             {
-                response = await _client.PostAsync($"{_mlUri}/predict", content, ct);
+                response = await _client.PostAsync($"{_mlUri}/predict",
+                    new StringContent(JsonSerializer.Serialize(input), Encoding.UTF8, "application/json"),
+                    ct);
             }
             catch { }
 

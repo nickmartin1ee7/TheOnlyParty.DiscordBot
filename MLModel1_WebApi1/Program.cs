@@ -8,7 +8,6 @@ using static MLModel1;
 using Microsoft.AspNetCore.Mvc;
 using System.Linq;
 using TheOnlyParty.ClassLibrary;
-using Microsoft.Extensions.Logging;
 
 // Configure app
 var builder = WebApplication.CreateBuilder(args);

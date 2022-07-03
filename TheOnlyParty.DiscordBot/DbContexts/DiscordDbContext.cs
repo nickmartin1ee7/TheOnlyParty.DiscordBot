@@ -1,5 +1,4 @@
-﻿
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 
 using TheOnlyParty.DiscordBot.Models;
 
@@ -15,3 +14,10 @@ public class DiscordDbContext : DbContext
     {
     }
 }
+
+/*
+dotnet tool install --global dotnet-ef
+dotnet add package Microsoft.EntityFrameworkCore.Design
+dotnet ef migrations add InitialCreate
+dotnet ef database update
+ */

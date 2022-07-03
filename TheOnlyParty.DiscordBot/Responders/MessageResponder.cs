@@ -35,7 +35,7 @@ public class MessageCreateResponder : IResponder<IMessageCreate>
         if (!messageResult.IsSuccess || string.IsNullOrWhiteSpace(messageResult.Entity.Content))
             return Result.FromSuccess();
 
-        var mlResult = await _mlService.PredictAsync(gatewayEvent.Content, ct);
+        var mlResult = await _mlService.PredictAsync(messageResult.Entity.Content, ct);
 
         if (!mlResult.IsSuccess || mlResult.Result is null)
         {
@@ -56,13 +56,13 @@ public class MessageCreateResponder : IResponder<IMessageCreate>
 
         if (existingUser is null)
         {
-            await _discordDb.UserReports.AddAsync(new UserReport
+            _discordDb.UserReports.Add(new UserReport
             {
                 UserId = authorId,
                 TotalMessages = 1,
                 PositiveMessages = mlResult.Result.Positive ? 1 : 0,
                 NegativeMessages = mlResult.Result.Positive ? 0 : 1
-            }, ct);
+            });
         }
         else
         {
