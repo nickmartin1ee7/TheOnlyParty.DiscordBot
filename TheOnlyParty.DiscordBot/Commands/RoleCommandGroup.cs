@@ -232,7 +232,7 @@ namespace TheOnlyParty.DiscordBot.Commands
                     var user = await _guildApi.GetGuildMemberAsync(_ctx.GuildID.Value, userId!.Value, CancellationToken);
 
                     embedBuilder.AddField(
-                        user.IsSuccess && user.IsDefined() ? userReport.UserId : $"{user.Entity.Nickname.Value} ({user.Entity.User.Value.Username})",
+                        user.IsSuccess && user.IsDefined() ? $"{user.Entity.Nickname.Value} ({user.Entity.User.Value.Username})" : userReport.UserId,
                         $"{userReport.PositivityRate:P} ({userReport.TotalMessages} messages)",
                         true);
                 }
