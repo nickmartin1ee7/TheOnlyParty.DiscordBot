@@ -231,8 +231,10 @@ namespace TheOnlyParty.DiscordBot.Commands
                     _ = Snowflake.TryParse(userReport.UserId, out var userId);
                     var user = await _guildApi.GetGuildMemberAsync(_ctx.GuildID.Value, userId!.Value, CancellationToken);
 
+                    if (!user.IsSuccess || !user.IsDefined()) continue;
+
                     embedBuilder.AddField(
-                        user.IsSuccess && user.IsDefined() ? $"{user.Entity.Nickname.Value} ({user.Entity.User.Value.Username})" : userReport.UserId,
+                        user.Entity.Nickname.HasValue ? $"{user.Entity.Nickname.Value} ({user.Entity.User.Value.Username})" : user.Entity.User.Value.Username,
                         $"{userReport.PositivityRate:P} ({userReport.TotalMessages} messages)",
                         true);
                 }
