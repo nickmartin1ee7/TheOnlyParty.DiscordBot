@@ -38,7 +38,8 @@ IHost host = Host.CreateDefaultBuilder(args)
             .AddTransient(_ => new MlService(settings.MlUri!))
             .AddCommandTree()
             .WithCommandGroup<UserCommandGroup>()
-            .WithCommandGroup<RoleCommandGroup>()
+            .WithCommandGroup<AdminCommandGroup>()
+            .WithCommandGroup<SentimentCommandGroup>()
             .Finish()
             ;
 
