@@ -57,11 +57,16 @@ public class MessageCreateResponder : IResponder<IMessageCreate>
 
         var messageResult = await _channelApi.GetChannelMessageAsync(gatewayEvent.ChannelID, gatewayEvent.ID, ct);
 
-        if (!messageResult.IsSuccess || string.IsNullOrWhiteSpace(messageResult.Entity.Content))
+        if (!messageResult.IsSuccess)
         {
             _logger.LogError("Failed to get message content! {errorMessage}",
                 messageResult.Error?.Message ?? "Error message N/A");
             return Result.FromError(messageResult);
+        }
+        else if (string.IsNullOrWhiteSpace(messageResult.Entity.Content))
+        {
+            _logger.LogDebug("Message contained no content");
+            return Result.FromSuccess();
         }
 
         _logger.LogDebug("Got content for message ({messageId})", messageResult.Entity.ID);
@@ -86,7 +91,7 @@ public class MessageCreateResponder : IResponder<IMessageCreate>
             _logger.LogDebug("Confidence threshold not met ({confidence:P}). Threshold is {threshold:P}",
                 mlResult.Result.Confidence,
                 _settings.MlConfidenceThreshold);
-            
+
             return Result.FromSuccess();
         }
 
