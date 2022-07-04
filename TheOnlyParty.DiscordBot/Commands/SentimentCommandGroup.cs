@@ -188,7 +188,7 @@ namespace TheOnlyParty.DiscordBot.Commands
         [CommandType(ApplicationCommandType.ChatInput)]
         [DiscordDefaultMemberPermissions(DiscordPermission.Administrator)]
         [Ephemeral]
-        [Description("List all the user reports")]
+        [Description("List all the user sentiment reports")]
         public async Task<IResult> SentimentReport()
         {
             try
@@ -197,8 +197,8 @@ namespace TheOnlyParty.DiscordBot.Commands
 
                 if (!_discordDbContext.UserReports.Any())
                 {
-                    var errReply = await _feedbackService.SendContextualErrorAsync("No user reports found");
-                    _logger.LogDebug("No user reports found");
+                    var errReply = await _feedbackService.SendContextualErrorAsync("No user sentiment reports found");
+                    _logger.LogDebug("No user sentiment reports found");
 
                     return errReply.IsSuccess
                     ? Result.FromSuccess()
@@ -210,14 +210,15 @@ namespace TheOnlyParty.DiscordBot.Commands
                     .OrderByDescending(ur => ur.PositivityRate)
                     .ToArray();
 
-                _logger.LogDebug("Query for user reports successful");
+                _logger.LogDebug("Query for user sentiment reports successful");
 
                 var embedBuilder = new EmbedBuilder
                 {
-                    Title = "User Reports",
-                    Description = $"There are {userReports.Length} user reports",
+                    Title = "User Sentiment Reports"
                 };
 
+                var localUserCount = 0;
+                
                 foreach (var userReport in userReports)
                 {
                     _ = Snowflake.TryParse(userReport.UserId, out var userId);
@@ -225,17 +226,21 @@ namespace TheOnlyParty.DiscordBot.Commands
 
                     if (!user.IsSuccess || !user.IsDefined()) continue;
 
+                    localUserCount++;
+
                     embedBuilder.AddField(
                         user.Entity.Nickname.HasValue ? $"{user.Entity.Nickname.Value} ({user.Entity.User.Value.Username})" : $"{user.Entity.User.Value.ToFullUsername()}",
                         $"{userReport.PositivityRate:P} ({userReport.TotalMessages} messages)",
                         true);
                 }
 
-                _logger.LogDebug("Built embed for user reports from guild API");
+                embedBuilder.Description = $"There are {localUserCount} user sentiment reports";
+
+                _logger.LogDebug("Built embed for user sentiment reports from guild API");
 
                 var reply = await _feedbackService.SendContextualEmbedAsync(embedBuilder.Build().Entity, ct: CancellationToken);
 
-                _logger.LogDebug("List user reports completed successfully");
+                _logger.LogDebug("List user sentiment reports completed successfully");
 
                 return reply.IsSuccess
                     ? Result.FromSuccess()
@@ -243,7 +248,7 @@ namespace TheOnlyParty.DiscordBot.Commands
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error listing user reports");
+                _logger.LogError(ex, "Error listing user sentiment reports");
                 throw;
             }
         }
