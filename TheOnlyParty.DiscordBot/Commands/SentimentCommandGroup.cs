@@ -229,7 +229,9 @@ namespace TheOnlyParty.DiscordBot.Commands
                     localUserCount++;
 
                     embedBuilder.AddField(
-                        user.Entity.Nickname.HasValue ? $"{user.Entity.Nickname.Value} ({user.Entity.User.Value.Username})" : $"{user.Entity.User.Value.ToFullUsername()}",
+                        user.Entity.Nickname.HasValue && !string.IsNullOrWhiteSpace(user.Entity.Nickname.Value)
+                            ? $"{user.Entity.Nickname.Value} ({user.Entity.User.Value.ToFullUsername()})"
+                            : $"{user.Entity.User.Value.ToFullUsername()}",
                         $"{userReport.PositivityRate:P} ({userReport.TotalMessages} messages)",
                         true);
                 }
