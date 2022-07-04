@@ -32,7 +32,7 @@ public class MessageCreateResponder : IResponder<IMessageCreate>
 
     public async Task<Result> RespondAsync(IMessageCreate gatewayEvent, CancellationToken ct = default)
     {
-        if (gatewayEvent.Author.IsBot.Value) return Result.FromSuccess();
+        if (gatewayEvent.Author.IsBot.HasValue && gatewayEvent.Author.IsBot.Value) return Result.FromSuccess();
 
         var authorId = gatewayEvent.Author.ID.ToString();
 
