@@ -14,6 +14,7 @@ using Remora.Rest.Core;
 using Remora.Results;
 
 using TheOnlyParty.DiscordBot.DbContexts;
+using TheOnlyParty.DiscordBot.Extensions;
 using TheOnlyParty.DiscordBot.Models;
 using TheOnlyParty.DiscordBot.Services;
 
@@ -234,7 +235,7 @@ namespace TheOnlyParty.DiscordBot.Commands
                     if (!user.IsSuccess || !user.IsDefined()) continue;
 
                     embedBuilder.AddField(
-                        user.Entity.Nickname.HasValue ? $"{user.Entity.Nickname.Value} ({user.Entity.User.Value.Username})" : user.Entity.User.Value.Username,
+                        user.Entity.Nickname.HasValue ? $"{user.Entity.Nickname.Value} ({user.Entity.User.Value.Username})" : $"{user.Entity.User.Value.ToFullUsername()}",
                         $"{userReport.PositivityRate:P} ({userReport.TotalMessages} messages)",
                         true);
                 }
