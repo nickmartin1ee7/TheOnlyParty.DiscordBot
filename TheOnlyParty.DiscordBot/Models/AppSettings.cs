@@ -9,4 +9,5 @@ public class AppSettings
     public string? LoggingKey { get; set; }
     public string? ReplUri { get; set; }
     public string? MlUri { get; set; }
+    public float? MlConfidenceThreshold { get; set; }
 }

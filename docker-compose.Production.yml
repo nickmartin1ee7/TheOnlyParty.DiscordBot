@@ -11,6 +11,7 @@ services:
       - AppSettings__LoggingKey
       - AppSettings__ReplUri
       - AppSettings__MlUri
+      - AppSettings__MlConfidenceThreshold
     depends_on:
       - seq
       - repl

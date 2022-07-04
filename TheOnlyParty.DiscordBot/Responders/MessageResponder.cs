@@ -14,16 +14,19 @@ public class MessageCreateResponder : IResponder<IMessageCreate>
     private readonly ILogger<MessageCreateResponder> _logger;
     private readonly IDiscordRestChannelAPI _channelApi;
     private readonly DiscordDbContext _discordDbContext;
+    private readonly AppSettings _settings;
     private readonly MlService _mlService;
 
     public MessageCreateResponder(ILogger<MessageCreateResponder> logger,
         IDiscordRestChannelAPI channelApi,
         DiscordDbContext discordDb,
+        AppSettings settings,
         MlService mlService)
     {
         _logger = logger;
         _channelApi = channelApi;
         _discordDbContext = discordDb;
+        _settings = settings;
         _mlService = mlService;
     }
 
@@ -75,6 +78,15 @@ public class MessageCreateResponder : IResponder<IMessageCreate>
             messageResult.Entity.Content,
             mlResult.Result.Positive ? "Positive" : "Negative",
             mlResult.Result.Confidence);
+
+        if (mlResult.Result.Confidence < _settings.MlConfidenceThreshold)
+        {
+            _logger.LogDebug("Confidence threshold not met ({confidence:P}). Threshold is {threshold:P}",
+                mlResult.Result.Confidence,
+                _settings.MlConfidenceThreshold);
+            
+            return Result.FromSuccess();
+        }
 
         var existingUser = _discordDbContext.UserReports.FirstOrDefault(ur => ur.UserId == authorId);
 
