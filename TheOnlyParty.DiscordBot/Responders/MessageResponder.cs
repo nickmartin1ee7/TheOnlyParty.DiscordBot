@@ -51,7 +51,7 @@ public class MessageCreateResponder : IResponder<IMessageCreate>
             return Result.FromSuccess();
         }
 
-        _logger.LogDebug("[1/4] Message Created by {authorName} ({authorId})", gatewayEvent.Author.Username, authorId);
+        _logger.LogDebug("Message Created by {authorName} ({authorId})", gatewayEvent.Author.Username, authorId);
 
         var messageResult = await _channelApi.GetChannelMessageAsync(gatewayEvent.ChannelID, gatewayEvent.ID, ct);
 
@@ -62,7 +62,7 @@ public class MessageCreateResponder : IResponder<IMessageCreate>
             return Result.FromError(messageResult);
         }
 
-        _logger.LogDebug("[2/4] Got content for message ({messageId})", messageResult.Entity.ID);
+        _logger.LogDebug("Got content for message ({messageId})", messageResult.Entity.ID);
 
         var mlResult = await _mlService.PredictAsync(messageResult.Entity.Content, ct);
 
@@ -92,7 +92,7 @@ public class MessageCreateResponder : IResponder<IMessageCreate>
 
         if (existingUser is null)
         {
-            _logger.LogDebug("[3/4] Creating new User Report for {authorId}", authorId);
+            _logger.LogDebug("Creating new User Report for {authorId}", authorId);
 
             _discordDbContext.UserReports.Add(new UserReport
             {
@@ -104,7 +104,7 @@ public class MessageCreateResponder : IResponder<IMessageCreate>
         }
         else
         {
-            _logger.LogDebug("[3/4] Updating User Report for {authorId}", authorId);
+            _logger.LogDebug("Updating User Report for {authorId}", authorId);
             existingUser.TotalMessages++;
             existingUser.PositiveMessages += mlResult.Result.Positive ? 1 : 0;
             existingUser.NegativeMessages += mlResult.Result.Positive ? 0 : 1;
@@ -113,7 +113,7 @@ public class MessageCreateResponder : IResponder<IMessageCreate>
 
         await _discordDbContext.SaveChangesAsync();
 
-        _logger.LogDebug("[4/4] Message Created handled successfully");
+        _logger.LogDebug("Message Created handled successfully");
 
         return Result.FromSuccess();
     }
