@@ -1,7 +1,4 @@
-﻿using System;
-using System.Runtime;
-
-using Remora.Discord.API.Abstractions.Gateway.Events;
+﻿using Remora.Discord.API.Abstractions.Gateway.Events;
 using Remora.Discord.API.Abstractions.Objects;
 using Remora.Discord.API.Abstractions.Rest;
 using Remora.Discord.API.Gateway.Commands;
@@ -44,7 +41,12 @@ public class ReadyResponder : IResponder<IReady>
         {
             if (string.IsNullOrWhiteSpace(_settings.DiscordStatus)) return;
 
-            var updateCommand = new UpdatePresence(ClientStatus.Online, false, null, new IActivity[]
+            var status = new ClientStatus
+            {
+                Desktop = new Optional<UserStatus>(UserStatus.Online)
+            };
+
+            var updateCommand = new UpdatePresence(status.Desktop.Value, false, null, new IActivity[]
             {
                 new Activity(_settings.DiscordStatus, ActivityType.Watching)
             });
@@ -74,8 +76,8 @@ public class ReadyResponder : IResponder<IReady>
             foreach (var guild in gatewayEvent.Guilds)
             {
                 var guildPreview = await _guildApi.GetGuildPreviewAsync(guild.ID, ct);
-                
-                if(!guildPreview.IsSuccess)
+
+                if (!guildPreview.IsSuccess)
                     continue;
 
                 userCount += guildPreview.Entity.ApproximateMemberCount.HasValue

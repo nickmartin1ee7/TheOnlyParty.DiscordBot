@@ -40,7 +40,9 @@ namespace TheOnlyParty.DiscordBot.Commands
         [Description("Get the historical sentiment of a user")]
         public async Task<IResult> Sentiment([Description("User ID")] string? userId = null)
         {
-            userId ??= _ctx.User.ID.ToString();
+            var c = _ctx as InteractionContext;
+
+            userId ??= c!.Interaction.User.Value.ID.ToString();
 
             try
             {
@@ -126,9 +128,11 @@ namespace TheOnlyParty.DiscordBot.Commands
         [Description("Toggle Opt-in/Opt-out of sentiment analysis for you")]
         public async Task<IResult> SentimentToggle()
         {
+            var c = _ctx as InteractionContext;
+
             try
             {
-                var authorId = _ctx.User.ID.ToString();
+                var authorId = c!.Interaction.User.Value.ID.ToString();
 
                 await LogCommandUsageAsync(nameof(SentimentToggle), authorId);
 
@@ -193,6 +197,8 @@ namespace TheOnlyParty.DiscordBot.Commands
         {
             try
             {
+                var c = _ctx as InteractionContext;
+
                 await LogCommandUsageAsync(nameof(SentimentReport));
 
                 if (!_discordDbContext.UserReports.Any())
@@ -218,11 +224,11 @@ namespace TheOnlyParty.DiscordBot.Commands
                 };
 
                 var localUserCount = 0;
-                
+
                 foreach (var userReport in userReports)
                 {
                     _ = Snowflake.TryParse(userReport.UserId, out var userId);
-                    var user = await _guildApi.GetGuildMemberAsync(_ctx.GuildID.Value, userId!.Value, CancellationToken);
+                    var user = await _guildApi.GetGuildMemberAsync(c!.Interaction.GuildID.Value, userId!.Value, CancellationToken);
 
                     if (!user.IsSuccess || !user.IsDefined()) continue;
 

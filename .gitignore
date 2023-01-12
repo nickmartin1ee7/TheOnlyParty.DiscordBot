@@ -362,3 +362,5 @@ MigrationBackup/
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
 /TheOnlyParty.ClassLibrary/TrainingData
+*.db-shm
+*.db-wal

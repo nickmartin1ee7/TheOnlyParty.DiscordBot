@@ -14,6 +14,7 @@ using TheOnlyParty.DiscordBot.Services;
 
 var configuration = new ConfigurationBuilder()
     .AddJsonFile("appsettings.json")
+    .AddJsonFile("appsettings.Development.json", true)
     .AddEnvironmentVariables()
     .Build();
 
@@ -25,7 +26,7 @@ ConfigureLogger(configuration, settings);
 
 IHost host = Host.CreateDefaultBuilder(args)
     .UseSerilog(Log.Logger)
-    .AddDiscordService(_ => settings.DiscordToken!)
+    .AddDiscordService(_ => settings!.DiscordToken!)
     .ConfigureServices(services =>
     {
         services
@@ -33,13 +34,14 @@ IHost host = Host.CreateDefaultBuilder(args)
                 .UseSqlite("Data Source = /app/Data/discord.db"))
             .AddDiscordCommands(true)
             .AddSingleton(configuration)
-            .AddSingleton(settings)
-            .AddTransient(_ => new ReplService(settings.ReplUri!))
-            .AddTransient(_ => new MlService(settings.MlUri!))
+            .AddSingleton(settings!)
+            .AddTransient(_ => new ReplService(settings!.ReplUri!))
+            .AddTransient(_ => new MlService(settings!.MlUri!))
             .AddCommandTree()
             .WithCommandGroup<UserCommandGroup>()
             .WithCommandGroup<AdminCommandGroup>()
             .WithCommandGroup<SentimentCommandGroup>()
+            .WithCommandGroup<FlightCommandGroup>()
             .Finish()
             ;
 
@@ -56,7 +58,7 @@ IHost host = Host.CreateDefaultBuilder(args)
 
 AppDomain.CurrentDomain.UnhandledException += CurrentDomain_UnhandledException;
 
-host.Services.GetRequiredService<DiscordDbContext>().Database.Migrate();
+//host.Services.GetRequiredService<DiscordDbContext>().Database.Migrate();
 await host.RunAsync();
 
 static void CurrentDomain_UnhandledException(object sender, UnhandledExceptionEventArgs e)
@@ -65,12 +67,15 @@ static void CurrentDomain_UnhandledException(object sender, UnhandledExceptionEv
     Log.CloseAndFlush();
 }
 
-static void ConfigureLogger(IConfigurationRoot configuration, AppSettings settings)
+static void ConfigureLogger(IConfigurationRoot configuration, AppSettings? settings)
 {
-    Log.Logger = new LoggerConfiguration()
-        .WriteTo.Seq(
-            serverUrl: settings.LoggingUri!,
-            apiKey: settings.LoggingKey)
-        .ReadFrom.Configuration(configuration)
-        .CreateLogger();
+    var loggerConfig = new LoggerConfiguration()
+        .ReadFrom.Configuration(configuration);
+
+    if (settings?.LoggingUri is not null)
+        loggerConfig.WriteTo.Seq(
+                serverUrl: settings.LoggingUri,
+                apiKey: settings.LoggingKey);
+
+    Log.Logger = loggerConfig.CreateLogger();
 }

@@ -1,12 +1,10 @@
-﻿using Remora.Commands.Attributes;
-using System.Reflection;
+﻿using System.Runtime.CompilerServices;
 
 using Remora.Commands.Groups;
 using Remora.Discord.API.Abstractions.Rest;
 using Remora.Discord.Commands.Contexts;
-using Remora.Discord.API.Objects;
+
 using TheOnlyParty.DiscordBot.Extensions;
-using System.Runtime.CompilerServices;
 
 namespace TheOnlyParty.DiscordBot.Commands;
 
@@ -28,18 +26,20 @@ public class LoggedCommandGroup<TCommandGroup> : CommandGroup
 
     protected async Task LogCommandUsageAsync([CallerMemberName] string callerMethodName = "", params string[] commandArguments)
     {
-        var guildName = await _guildApi.GetGuildAsync(_ctx.GuildID.Value, ct: CancellationToken);
+        var c = _ctx as InteractionContext;
 
-        var channelName = await _channelApi.GetChannelAsync(_ctx.ChannelID, ct: CancellationToken);
+        var guildName = await _guildApi.GetGuildAsync(c!.Interaction.GuildID.Value, ct: CancellationToken);
+
+        var channelName = await _channelApi.GetChannelAsync(c.Interaction.ChannelID.Value, ct: CancellationToken);
 
         _logger.LogInformation("{commandName} triggered by {userName} ({userId}) in #{channel} ({channelId}); {guildName} ({guildId}); Message: {message}",
             callerMethodName,
-            _ctx.User.ToFullUsername(),
-            _ctx.User.ID,
+            c.Interaction.User.Value.ToFullUsername(),
+            c.Interaction.User.Value.ID,
             channelName.Entity.Name.Value,
-            _ctx.ChannelID,
+            c.Interaction.ChannelID,
             guildName.Entity.Name,
-            _ctx.GuildID.Value,
+            c.Interaction.GuildID.Value,
             commandArguments.Any() ? string.Join(' ', commandArguments) : "None");
     }
 }
