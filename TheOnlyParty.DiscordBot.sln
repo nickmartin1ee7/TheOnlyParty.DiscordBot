@@ -10,6 +10,7 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{EAA3B839-0F4A-40E2-AA7E-64857EDDC4CB}"
 	ProjectSection(SolutionItems) = preProject
 		.gitignore = .gitignore
+		TextFile1.txt = TextFile1.txt
 	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MLModel1_WebApi1", "MLModel1_WebApi1\MLModel1_WebApi1.csproj", "{62B80012-130B-4135-88A9-753B33AEABA6}"

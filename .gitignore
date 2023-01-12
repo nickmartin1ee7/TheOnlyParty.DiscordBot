@@ -364,3 +364,4 @@ FodyWeavers.xsd
 /TheOnlyParty.ClassLibrary/TrainingData
 *.db-shm
 *.db-wal
+/TheOnlyParty.DiscordBot/appsettings.Development.json

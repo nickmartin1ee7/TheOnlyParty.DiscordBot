@@ -32,10 +32,34 @@ public class FlightCommandGroup : LoggedCommandGroup<UserCommandGroup>
     [Command(nameof(TrackFlight))]
     [CommandType(ApplicationCommandType.ChatInput)]
     [Description("Track updates on for a private flight")]
-    public async Task<IResult> TrackFlight([Description("Private Flight/Tail Number (e.g. N123AB)")] string input)
+    public async Task<IResult> TrackFlight([Description("Private Flight/Tail Number (e.g. N123AB)")] string ident)
     {
         // TODO: https://github.com/Remora/Remora.Discord/tree/main/Remora.Discord.Interactivity
 
+        var reply = await _feedbackService.SendContextualNeutralAsync("This feature is under development", ct: CancellationToken);
+
+        return reply.IsSuccess
+            ? Result.FromSuccess()
+            : Result.FromError(reply);
+    }
+
+    [Command(nameof(WeatherObservations))]
+    [CommandType(ApplicationCommandType.ChatInput)]
+    [Description("Returns weather for an airport in the form of a decoded METAR.")]
+    public async Task<IResult> WeatherObservations([Description("Private Flight/Tail Number (e.g. N123AB)")] string ident)
+    {
+        var reply = await _feedbackService.SendContextualNeutralAsync("This feature is under development", ct: CancellationToken);
+
+        return reply.IsSuccess
+            ? Result.FromSuccess()
+            : Result.FromError(reply);
+    }
+
+    [Command(nameof(WeatherForecast))]
+    [CommandType(ApplicationCommandType.ChatInput)]
+    [Description("Returns the weather forecast for an airport in the form of a decoded TAF (Terminal Area Forecast).")]
+    public async Task<IResult> WeatherForecast([Description("Private Flight/Tail Number (e.g. N123AB)")] string ident)
+    {
         var reply = await _feedbackService.SendContextualNeutralAsync("This feature is under development", ct: CancellationToken);
 
         return reply.IsSuccess
