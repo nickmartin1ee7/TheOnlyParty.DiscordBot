@@ -42,7 +42,7 @@ namespace TheOnlyParty.DiscordBot.Commands
 
                 if (string.IsNullOrWhiteSpace(statusMessage)) return Result.FromSuccess();
 
-                var updateCommand = new UpdatePresence(ClientStatus.Online, false, null, new IActivity[]
+                var updateCommand = new UpdatePresence(new ClientStatus().Desktop.Value, false, null, new IActivity[]
                 {
                 new Activity(statusMessage, ActivityType.Watching)
                 });

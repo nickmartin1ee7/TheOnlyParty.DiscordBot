@@ -39,6 +39,7 @@ public class UserCommandGroup : LoggedCommandGroup<UserCommandGroup>
     [Description("Evaluate C# Source Code using REPL")]
     public async Task<IResult> Eval([Description("Enter C# Source Code")] string code)
     {
+        var c = _ctx as InteractionContext;
         await LogCommandUsageAsync(nameof(Eval), code);
 
         if (string.IsNullOrWhiteSpace(code))
@@ -64,7 +65,7 @@ public class UserCommandGroup : LoggedCommandGroup<UserCommandGroup>
 
         var embed = new EmbedBuilder()
                .WithTitle($"Evaluation Result: {status}")
-               .WithAuthor(_ctx.User.Username)
+               .WithAuthor(c!.Interaction.User.Value)
                .WithColour(string.IsNullOrEmpty(replResult!.Exception) ? Color.Green : Color.Red)
                .WithFooter($"Compile: {replResult!.CompileTime!.Value.TotalMilliseconds:F}ms | Execution: {replResult!.ExecutionTime!.Value.TotalMilliseconds:F}ms");
 
@@ -98,6 +99,7 @@ public class UserCommandGroup : LoggedCommandGroup<UserCommandGroup>
     [Description("Leave feedback for the developer")]
     public async Task<IResult> Feedback([Description("Enter your feedback to the developer")] string text)
     {
+        var c = _ctx as InteractionContext;
         await LogCommandUsageAsync(text);
 
         if (string.IsNullOrWhiteSpace(text))
@@ -109,7 +111,7 @@ public class UserCommandGroup : LoggedCommandGroup<UserCommandGroup>
                             : Result.FromError(invalidReply);
         }
 
-        _logger.LogInformation("New feedback left by {userName}. Feedback: {feedbackText}", _ctx.User.ToFullUsername(), text.Trim());
+        _logger.LogInformation("New feedback left by {userName}. Feedback: {feedbackText}", c!.Interaction.User.Value.ToFullUsername(), text.Trim());
 
         var reply = await _feedbackService.SendContextualEmbedAsync(new Embed("Feedback Submitted",
                 Description: "Thank you for your feedback! A developer will review your comments shortly.",
