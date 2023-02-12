@@ -7,6 +7,7 @@ using Remora.Discord.Hosting.Extensions;
 
 using Serilog;
 
+using TheOnlyParty.ClassLibrary.Flight;
 using TheOnlyParty.DiscordBot.Commands;
 using TheOnlyParty.DiscordBot.DbContexts;
 using TheOnlyParty.DiscordBot.Models;
@@ -37,12 +38,13 @@ IHost host = Host.CreateDefaultBuilder(args)
             .AddSingleton(settings!)
             .AddTransient(_ => new ReplService(settings!.ReplUri!))
             .AddTransient(_ => new MlService(settings!.MlUri!))
-            .AddTransient(_ => new FlightTrackerService())
+            .AddTransient(sp => new FlightAwareService(sp.GetRequiredService<IHttpClientFactory>(), settings!.FlightAwareApiKey!))
             .AddCommandTree()
             .WithCommandGroup<UserCommandGroup>()
             .WithCommandGroup<AdminCommandGroup>()
             .WithCommandGroup<SentimentCommandGroup>()
             .WithCommandGroup<FlightCommandGroup>()
+            .WithCommandGroup<OpenAiCommandGroup>()
             .Finish()
             ;
 

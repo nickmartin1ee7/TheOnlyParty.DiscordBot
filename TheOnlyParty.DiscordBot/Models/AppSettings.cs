@@ -10,4 +10,6 @@ public class AppSettings
     public string? ReplUri { get; set; }
     public string? MlUri { get; set; }
     public float? MlConfidenceThreshold { get; set; }
+    public string? FlightAwareApiKey { get; set; }
+    public string? OpenAiApiKey { get; set; }
 }

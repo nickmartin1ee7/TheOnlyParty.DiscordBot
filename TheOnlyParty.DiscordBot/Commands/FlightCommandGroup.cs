@@ -3,64 +3,82 @@
 using Remora.Commands.Attributes;
 using Remora.Discord.API.Abstractions.Objects;
 using Remora.Discord.API.Abstractions.Rest;
+using Remora.Discord.API.Objects;
 using Remora.Discord.Commands.Attributes;
 using Remora.Discord.Commands.Contexts;
+using Remora.Discord.Commands.Extensions;
 using Remora.Discord.Commands.Feedback.Services;
+using Remora.Discord.Extensions.Embeds;
+using Remora.Discord.Pagination.Extensions;
 using Remora.Results;
 
-using TheOnlyParty.DiscordBot.Services;
+using TheOnlyParty.ClassLibrary.Flight;
 
 namespace TheOnlyParty.DiscordBot.Commands;
 
 public class FlightCommandGroup : LoggedCommandGroup<UserCommandGroup>
 {
     private readonly FeedbackService _feedbackService;
-    private readonly FlightTrackerService _flightTrackerService;
+    private readonly FlightAwareService _flightAwareService;
 
     public FlightCommandGroup(ICommandContext ctx,
         ILogger<UserCommandGroup> logger,
         IDiscordRestGuildAPI guildApi,
         IDiscordRestChannelAPI channelApi,
         FeedbackService feedbackService,
-        FlightTrackerService flightTrackerService)
+        FlightAwareService flightAwareService)
         : base(ctx, logger, guildApi, channelApi)
     {
         _feedbackService = feedbackService;
-        _flightTrackerService = flightTrackerService;
+        _flightAwareService = flightAwareService;
     }
 
-    [Command(nameof(TrackFlight))]
+    [Command(nameof(GetFlights))]
     [CommandType(ApplicationCommandType.ChatInput)]
-    [Description("Track updates on for a private flight")]
-    public async Task<IResult> TrackFlight([Description("Private Flight/Tail Number (e.g. N123AB)")] string ident)
+    [Description("Returns the flight info status summary for a registration, ident, or fa_flight_id.")]
+    public async Task<IResult> GetFlights([Description("The ident, registration, or fa_flight_id to fetch")] string ident)
     {
-        // TODO: https://github.com/Remora/Remora.Discord/tree/main/Remora.Discord.Interactivity
+        var flights = await _flightAwareService.GetFlightsAsync(ident);
 
-        var reply = await _feedbackService.SendContextualNeutralAsync("This feature is under development", ct: CancellationToken);
+        if (!flights?.Any() ?? false)
+        {
+            var nullReply = await _feedbackService.SendContextualNeutralAsync("This feature is under development",
+                ct: CancellationToken);
 
-        return reply.IsSuccess
-            ? Result.FromSuccess()
-            : Result.FromError(reply);
-    }
+            return nullReply.IsSuccess
+                ? Result.FromSuccess()
+                : Result.FromError(nullReply);
+        }
 
-    [Command(nameof(WeatherObservations))]
-    [CommandType(ApplicationCommandType.ChatInput)]
-    [Description("Returns weather for an airport in the form of a decoded METAR.")]
-    public async Task<IResult> WeatherObservations([Description("Private Flight/Tail Number (e.g. N123AB)")] string ident)
-    {
-        var reply = await _feedbackService.SendContextualNeutralAsync("This feature is under development", ct: CancellationToken);
+        var embeds = new List<Embed>(flights!.Count);
 
-        return reply.IsSuccess
-            ? Result.FromSuccess()
-            : Result.FromError(reply);
-    }
+        for (var i = 0; i < flights.Count; i++)
+        {
+            var flight = flights[i];
 
-    [Command(nameof(WeatherForecast))]
-    [CommandType(ApplicationCommandType.ChatInput)]
-    [Description("Returns the weather forecast for an airport in the form of a decoded TAF (Terminal Area Forecast).")]
-    public async Task<IResult> WeatherForecast([Description("Private Flight/Tail Number (e.g. N123AB)")] string ident)
-    {
-        var reply = await _feedbackService.SendContextualNeutralAsync("This feature is under development", ct: CancellationToken);
+            var embedBuilder = new EmbedBuilder()
+                .WithTitle($"{i + 1}/{flights.Count}: {flight.FaFlightId}");
+
+            var props = flight.GetType().GetProperties();
+
+            for (var j = 0; j < props.Length && j < 10; j++)
+            {
+                var prop = props[j];
+                embedBuilder.AddField(prop.Name, prop.GetValue(flight)?.ToString() ?? "Unknown");
+            }
+
+            embeds.Add(embedBuilder.Build().Entity);
+        }
+
+        _ = _ctx.TryGetChannelID(out var channelId);
+        _ = _ctx.TryGetUserID(out var userId);
+
+
+        var reply = await _feedbackService.SendPaginatedMessageAsync(
+            channelId.Value,
+            userId.Value,
+            embeds,
+            ct: CancellationToken);
 
         return reply.IsSuccess
             ? Result.FromSuccess()
