@@ -12,6 +12,8 @@ services:
       - AppSettings__ReplUri
       - AppSettings__MlUri
       - AppSettings__MlConfidenceThreshold
+      - AppSettings__FlightAwareApiKey
+      - AppSettings__OpenAiApiKey
     depends_on:
       - seq
       - repl
