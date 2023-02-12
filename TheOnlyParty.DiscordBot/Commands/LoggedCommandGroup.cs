@@ -34,8 +34,8 @@ public class LoggedCommandGroup<TCommandGroup> : CommandGroup
 
         _logger.LogInformation("{commandName} triggered by {userName} ({userId}) in #{channel} ({channelId}); {guildName} ({guildId}); Message: {message}",
             callerMethodName,
-            c.Interaction.User.Value.ToFullUsername(),
-            c.Interaction.User.Value.ID,
+            c.Interaction.Member.Value.User.Value.ToFullUsername(),
+            c.Interaction.Member.Value.User.Value.ID,
             channelName.Entity.Name.Value,
             c.Interaction.ChannelID,
             guildName.Entity.Name,

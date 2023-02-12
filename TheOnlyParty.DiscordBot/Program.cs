@@ -1,5 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 
+using OpenAI_API;
+
 using Remora.Commands.Extensions;
 using Remora.Discord.Commands.Extensions;
 using Remora.Discord.Gateway.Extensions;
@@ -36,6 +38,7 @@ IHost host = Host.CreateDefaultBuilder(args)
             .AddDiscordCommands(true)
             .AddSingleton(configuration)
             .AddSingleton(settings!)
+            .AddSingleton<OpenAIAPI>(_ => new OpenAIAPI(new APIAuthentication(settings.OpenAiApiKey!)))
             .AddTransient(_ => new ReplService(settings!.ReplUri!))
             .AddTransient(_ => new MlService(settings!.MlUri!))
             .AddTransient(sp => new FlightAwareService(sp.GetRequiredService<IHttpClientFactory>(), settings!.FlightAwareApiKey!))
