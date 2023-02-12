@@ -3,6 +3,7 @@ using System.Drawing;
 
 using OpenAI_API;
 using OpenAI_API.Completions;
+using OpenAI_API.Models;
 
 using Remora.Commands.Attributes;
 using Remora.Discord.API.Abstractions.Objects;
@@ -39,23 +40,31 @@ namespace TheOnlyParty.DiscordBot.Commands
 
         [Command(nameof(Chat))]
         [CommandType(ApplicationCommandType.ChatInput)]
-        [Description("Talk to ChatGPT. Be mindful, this command uses credits (750 words = $0.02)!")]
-        public async Task<IResult> Chat([Description("This is the message sent to ChatGPT.")] string prompt)
+        [Description("Talk to ChatGPT. Be mindful, this command uses credits (750 words = $0.02).")]
+        public async Task<IResult> Chat(
+            [Description("This is the message sent to ChatGPT.")] string prompt,
+            [Description("Specify response of max tokens (1k tokens = 750 words).")] int maxTokens = 200)
         {
             try
             {
                 await LogCommandUsageAsync(nameof(Chat), prompt);
 
-                var response = await _openAiApi.Completions.CreateCompletionAsync(new CompletionRequest(prompt));
+                if (maxTokens <= 0)
+                    maxTokens = 200;
+
+                var response = await _openAiApi.Completions.CreateCompletionAsync(new CompletionRequest(
+                        prompt,
+                        Model.DefaultModel,
+                        maxTokens));
 
                 var responseCompletions = response is null
-                    ? "Error"
+                    ? "<Response from ChatGPT was empty>"
                     : string.Join(Environment.NewLine, response.Completions);
 
                 var reply = await _feedbackService.SendContextualEmbedAsync(new Embed("ChatGPT",
                         Description: response is null
-                            ? "Error communicating with ChatGPT"
-                            : $"{response.Model} was used to generate a response at {response.Created}.",
+                            ? "**Error** communicating with ChatGPT"
+                            : $"{response.Model.ModelID} was used to **successfully** generate a response at {response.Created}.",
                         Fields: new List<EmbedField>
                         {
                             new EmbedField("Prompt", $"```txt{Environment.NewLine}{prompt}{Environment.NewLine}```"),
@@ -64,7 +73,7 @@ namespace TheOnlyParty.DiscordBot.Commands
                         Colour: response is null
                             ? new Optional<Color>(Color.Red)
                             : new Optional<Color>(Color.Green),
-                        Footer: new EmbedFooter($"Processing time: {response?.ProcessingTime}")),
+                        Footer: new EmbedFooter($"Processing time: {response?.ProcessingTime.Seconds}s")),
                     ct: CancellationToken);
 
 
