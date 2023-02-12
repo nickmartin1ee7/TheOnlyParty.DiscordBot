@@ -61,6 +61,8 @@ namespace TheOnlyParty.DiscordBot.Commands
                     ? "<Response from ChatGPT was empty>"
                     : string.Join(Environment.NewLine, response.Completions);
 
+                _logger.LogDebug("Response from ChatGPT: {response}", responseCompletions);
+
                 var reply = await _feedbackService.SendContextualEmbedAsync(new Embed("ChatGPT",
                         Description: response is null
                             ? "**Error** communicating with ChatGPT"
