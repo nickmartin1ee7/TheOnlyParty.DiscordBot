@@ -58,25 +58,45 @@ namespace TheOnlyParty.DiscordBot.Commands
                         maxTokens));
 
                 var responseCompletions = response is null
-                    ? "<Response from ChatGPT was empty>"
+                    ? "**Error** communicating with ChatGPT"
                     : string.Join(Environment.NewLine, response.Completions);
 
                 _logger.LogDebug("Response from ChatGPT: {response}", responseCompletions);
+
+                const int maxFieldSize = 1000;
+                var fields = new List<EmbedField>();
+                fields.Add(new EmbedField("Prompt", $"```txt{Environment.NewLine}{prompt}{Environment.NewLine}```"));
+
+                if (responseCompletions.Length > maxFieldSize)
+                {
+                    int start = 0, end = 0;
+                    while (end < responseCompletions.Length)
+                    {
+                        end = Math.Min(start + maxFieldSize, responseCompletions.Length);
+                        while (end < responseCompletions.Length && !char.IsWhiteSpace(responseCompletions[end]))
+                        {
+                            end++;
+                        }
+                        fields.Add(new EmbedField($"Multi-part Response", $"```txt{Environment.NewLine}{responseCompletions.Substring(start, end - start)}{Environment.NewLine}```"));
+                        start = end + 1;
+                    }
+                }
+                else
+                {
+                    fields.Add(new EmbedField("Response", $"```txt{Environment.NewLine}{responseCompletions}{Environment.NewLine}```"));
+                }
 
                 var reply = await _feedbackService.SendContextualEmbedAsync(new Embed("ChatGPT",
                         Description: response is null
                             ? "**Error** communicating with ChatGPT"
                             : $"{response.Model.ModelID} was used to **successfully** generate a response at {response.Created}.",
-                        Fields: new List<EmbedField>
-                        {
-                            new EmbedField("Prompt", $"```txt{Environment.NewLine}{prompt}{Environment.NewLine}```"),
-                            new EmbedField("Response", $"```txt{Environment.NewLine}{responseCompletions}{Environment.NewLine}```")
-                        },
+                        Fields: fields,
                         Colour: response is null
                             ? new Optional<Color>(Color.Red)
                             : new Optional<Color>(Color.Green),
                         Footer: new EmbedFooter($"Processing time: {response?.ProcessingTime.Seconds}s")),
                     ct: CancellationToken);
+
 
 
                 return reply.IsSuccess
