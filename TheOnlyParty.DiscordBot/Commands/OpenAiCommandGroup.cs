@@ -77,7 +77,7 @@ namespace TheOnlyParty.DiscordBot.Commands
                         {
                             end++;
                         }
-                        fields.Add(new EmbedField($"Multi-part Response", $"```txt{Environment.NewLine}{responseCompletions.Substring(start, end - start)}{Environment.NewLine}```"));
+                        fields.Add(new EmbedField($"Multi-part Response ({fields.Count})", $"```txt{Environment.NewLine}{responseCompletions.Substring(start, end - start)}{Environment.NewLine}```"));
                         start = end + 1;
                     }
                 }
